@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Master List</title>
+</head>
+<body>
+
+<h2>Employee Directory</h2>
+
+<div>
+    <label for="sizeSelect">Rows per page: </label>
+    <select id="sizeSelect">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+        <option value="10" selected>10</option>
+    </select>
+</div>
+<br>
+
+<table border="1" width="100%">
+    <thead>
+    <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Job Level</th>
+        <th>Actions</th>
+    </tr>
+    <tr>
+        <th><input type="text" id="searchFname" placeholder="Search First Name..."></th>
+        <th><input type="text" id="searchLname" placeholder="Search Last Name..."></th>
+        <th><input type="number" id="searchJobLvl" placeholder="Search Job Lvl..."></th>
+        <th><button id="clearBtn">Clear Filters</button></th>
+    </tr>
+    </thead>
+    <tbody id="employeeTableBody">
+    </tbody>
+</table>
+
+<br>
+
+<div>
+    <button id="prevBtn" disabled>Previous Page</button>
+    <span id="pageInfo">Loading...</span>
+    <button id="nextBtn" disabled>Next Page</button>
+</div>
+
+<script src="/js/employee/employees.js"></script>
+</body>
+</html>
