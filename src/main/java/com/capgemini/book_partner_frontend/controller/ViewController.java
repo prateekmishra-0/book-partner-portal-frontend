@@ -12,5 +12,11 @@ public class ViewController {
         return "employee/employees";
     }
 
+    // NEW: Serve the details page
+    @GetMapping("/employee-details")
+    public String showEmployeeDetailsPage() {
+        return "employee/employee-details";
+    }
+
 
 }
