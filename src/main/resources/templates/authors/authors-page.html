@@ -167,7 +167,7 @@
                             <td class="p-4 text-center" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center space-x-2">
                                     <!-- <a th:href="@{/authors/{id}(id=${author.auId})}" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-eye mr-1"></i> View</a> -->
-                                    <button type="button" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm" th:data-id="${author.auId}" th:data-name="${author.firstName + ' ' + author.lastName}" onclick="prepareDelete(this, event)"><i class="fas fa-trash-alt mr-1"></i> </button>
+                                    <button type="button" title="Delete Author" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-3 rounded-lg text-sm transition shadow-sm inline-flex items-center justify-center" th:data-id="${author.auId}" th:data-name="${author.firstName + ' ' + author.lastName}" th:data-phone="${author.phone}" th:data-city="${author.city}" th:data-state="${author.state}" onclick="prepareDelete(this, event)"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -250,14 +250,21 @@
         </div>
     </div>
 
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
-            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5 text-red-500 text-4xl"><i class="fas fa-exclamation-triangle"></i></div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Deactivate?</h2>
-            <p class="text-slate-500 mb-8 text-sm">Are you sure about deactivating <strong id="deleteAuthorNameModal"></strong>?</p>
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 class="text-xl font-bold text-slate-900 mb-2">Delete Author?</h2>
+            <p class="text-slate-500 mb-4 text-sm">This action cannot be undone.</p>
+            <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left border border-slate-200">
+                <div class="font-bold text-slate-800 text-base mb-2 truncate" id="deleteAuthorNameModal"></div>
+                <div class="text-xs text-slate-500 flex justify-between items-center gap-2">
+                    <span class="bg-white px-2 py-1 rounded border border-slate-200 font-mono text-slate-600" id="deleteAuthorIdModal"></span>
+                    <span class="font-medium text-slate-600 truncate" id="deleteAuthorMetaModal"></span>
+                </div>
+            </div>
             <form id="deleteForm" method="post" class="flex space-x-3">
-                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-3 rounded-xl font-bold bg-slate-100 text-slate-600">Cancel</button>
-                <button type="submit" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700">Yes, Deactivate</button>
+                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Delete</button>
             </form>
         </div>
     </div> 
@@ -345,8 +352,16 @@
         // 4. Prepare Delete
         function prepareDelete(btn, e) {
             e.stopPropagation();
-            document.getElementById('deleteAuthorNameModal').innerText = btn.getAttribute('data-name');
-            document.getElementById('deleteForm').action = '/authors/delete/' + btn.getAttribute('data-id');
+            const authorId = btn.getAttribute('data-id') || '';
+            const authorName = btn.getAttribute('data-name') || '';
+            const phone = btn.getAttribute('data-phone') || 'N/A';
+            const city = btn.getAttribute('data-city') || 'N/A';
+            const state = btn.getAttribute('data-state') || 'N/A';
+
+            document.getElementById('deleteAuthorNameModal').innerText = authorName;
+            document.getElementById('deleteAuthorIdModal').innerText = authorId;
+            document.getElementById('deleteAuthorMetaModal').innerText = `${phone} | ${city}, ${state}`;
+            document.getElementById('deleteForm').action = '/authors/delete/' + authorId;
             toggleModal('deleteConfirmModal');
         }
 
