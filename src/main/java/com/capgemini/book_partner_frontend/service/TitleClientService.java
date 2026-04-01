@@ -6,11 +6,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import com.capgemini.book_partner_frontend.DTO.title.TitleDto;
+import com.capgemini.book_partner_frontend.DTO.author.AuthorDto;
+import com.capgemini.book_partner_frontend.DTO.publisher.PublisherDto;
 import com.capgemini.book_partner_frontend.DTO.title.PageMetadata;
 import com.capgemini.book_partner_frontend.DTO.title.PagedResult;
-import com.capgemini.book_partner_frontend.DTO.author.AuthorDto;
-import com.capgemini.book_partner_frontend.DTO.author.PublisherDto;
+import com.capgemini.book_partner_frontend.DTO.title.TitleDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
