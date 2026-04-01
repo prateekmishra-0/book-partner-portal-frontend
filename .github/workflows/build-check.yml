@@ -1,0 +1,29 @@
+name: Frontend Build Check & Artifact
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  pr-build-check: # THIS IS THE NAME YOU WILL USE IN STEP 4
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and Package
+        run: mvn clean package -DskipTests
+
+      - name: Upload JAR as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-app-pr-${{ github.event.pull_request.number }}
+          path: target/*.jar
+          retention-days: 7
