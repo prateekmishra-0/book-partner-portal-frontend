@@ -77,23 +77,23 @@
                         </div>
                     </div>
 
-                    <h2 class="text-2xl font-extrabold text-slate-900" th:text="${author.firstName + ' ' + author.lastName}">John Doe</h2>
+                    <h2 class="text-2xl font-extrabold text-slate-900" th:text="${author != null ? author.firstName + ' ' + author.lastName : 'Unknown Author'}">John Doe</h2>
 
                     <div class="my-6">
-                        <span th:if="${author.contract == 1}" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200"><i class="fas fa-check-circle mr-1"></i> Active Contract</span>
-                        <span th:if="${author.contract == 0}" class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full border border-slate-200"><i class="fas fa-times-circle mr-1"></i> No Contract</span>
+                        <span th:if="${author != null and author.contract == 1}" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200"><i class="fas fa-check-circle mr-1"></i> Active Contract</span>
+                        <span th:if="${author != null and author.contract == 0}" class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full border border-slate-200"><i class="fas fa-times-circle mr-1"></i> No Contract</span>
                     </div>
 
                     <ul class="text-left space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6">
-                        <li class="flex items-start">
+                        <li class="flex items-start" th:if="${author != null and author.phone != null}">
                             <i class="fas fa-phone text-indigo-400 w-6 mt-1"></i> 
                             <span th:text="${author.phone}">415 658-9932</span>
                         </li>
-                        <li class="flex items-start">
+                        <li class="flex items-start" th:if="${author != null}">
                             <i class="fas fa-map-marker-alt text-indigo-400 w-6 mt-1"></i> 
                             <div>
                                 <span class="block" th:text="${author.address != null ? author.address : 'No Address Provided'}">Address</span>
-                                <span class="block font-medium mt-1" th:text="${author.city + ', ' + author.state + ' ' + (author.zip != null ? author.zip : '')}">City, State</span>
+                                <span class="block font-medium mt-1" th:text="${author.city != null ? (author.city + ', ' + author.state + ' ' + (author.zip != null ? author.zip : '')) : 'No Location'}">City, State</span>
                             </div>
                         </li>
                     </ul>
