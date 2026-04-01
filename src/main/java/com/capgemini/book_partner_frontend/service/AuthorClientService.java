@@ -89,57 +89,70 @@ public class AuthorClientService {
     }
 
     // --- REVERTED: DROPDOWN SEARCH LOGIC ---
-    public PagedResult<AuthorDto> fetchAuthorsPaginated(int page, int size, String searchBy, String keyword) {
-        try {
-            // 1. Default URI for "Find All"
-            String uri = "/api/authors?page=" + page + "&size=" + size;
+public PagedResult<AuthorDto> fetchAuthorsPaginated(int page, int size, String searchBy, String keyword, String sort, String dir) {
+    try {
+        // 1. Start building the URI
+        StringBuilder uriBuilder = new StringBuilder();
 
-            // 2. If a keyword exists, build the specific search path
-            if (keyword != null && !keyword.trim().isEmpty() && searchBy != null) {
-                String searchPath = switch (searchBy) {
-                    case "firstName" -> "firstname?firstName=" + keyword;
-                    case "lastName" -> "lastname?lastName=" + keyword;
-                    case "city" -> "city?city=" + keyword;
-                    case "phone" -> "phone?phone=" + keyword;
-                    case "state" -> "state?state=" + keyword;
-                    default -> "";
-                };
-                
-                if (!searchPath.isEmpty()) {
-                    // This matches your @RestResource paths in the backend repository
-                    uri = "/api/authors/search/" + searchPath + "&page=" + page + "&size=" + size;
-                }
-            }
-
-            // 3. Fetch from backend
-            String jsonResponse = restClient.get()
-                    .uri(uri)
-                    .retrieve()
-                    .body(String.class);
-
-            if (jsonResponse == null) return new PagedResult<>(Collections.emptyList(), null);
-
-            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+        // 2. Determine if we are using a Search endpoint or a FindAll endpoint
+        if (keyword != null && !keyword.trim().isEmpty() && searchBy != null) {
+            String searchPath = switch (searchBy) {
+                case "firstName" -> "firstname?firstName=" + keyword;
+                case "lastName" -> "lastname?lastName=" + keyword;
+                case "city" -> "city?city=" + keyword;
+                case "phone" -> "phone?phone=" + keyword;
+                case "state" -> "state?state=" + keyword;
+                default -> "";
+            };
             
-            // 4. Extract Data
-            JsonNode authorsNode = rootNode.at("/_embedded/authors");
-            List<AuthorDto> authors = Collections.emptyList();
-            if (!authorsNode.isMissingNode() && !authorsNode.isEmpty()) {
-                authors = objectMapper.readerForListOf(AuthorDto.class).readValue(authorsNode);
+            if (!searchPath.isEmpty()) {
+                uriBuilder.append("/api/authors/search/").append(searchPath);
+            } else {
+                uriBuilder.append("/api/authors?");
             }
-
-            // 5. Extract Metadata
-            JsonNode pageNode = rootNode.at("/page");
-            PageMetadata metadata = null;
-            if (!pageNode.isMissingNode()) {
-                metadata = objectMapper.treeToValue(pageNode, PageMetadata.class);
-            }
-
-            return new PagedResult<>(authors, metadata);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new PagedResult<>(Collections.emptyList(), null);
+        } else {
+            uriBuilder.append("/api/authors?");
         }
+
+        // 3. Append Pagination and Sorting (Spring Data REST syntax: sort=fieldName,asc/desc)
+        // If the URI already has a '?', append with '&', otherwise start with '?'
+        String separator = uriBuilder.toString().contains("?") ? "&" : "?";
+        
+        uriBuilder.append(separator)
+                  .append("page=").append(page)
+                  .append("&size=").append(size)
+                  .append("&sort=").append(sort).append(",").append(dir);
+
+        // 4. Fetch from backend
+        String jsonResponse = restClient.get()
+                .uri(uriBuilder.toString())
+                .retrieve()
+                .body(String.class);
+
+        if (jsonResponse == null) return new PagedResult<>(Collections.emptyList(), null);
+
+        JsonNode rootNode = objectMapper.readTree(jsonResponse);
+        
+        // 5. Extract Data
+        JsonNode authorsNode = rootNode.at("/_embedded/authors");
+        List<AuthorDto> authors = Collections.emptyList();
+        if (!authorsNode.isMissingNode() && !authorsNode.isEmpty()) {
+            authors = objectMapper.readerForListOf(AuthorDto.class).readValue(authorsNode);
+        }
+
+        // 6. Extract Metadata
+        JsonNode pageNode = rootNode.at("/page");
+        PageMetadata metadata = null;
+        if (!pageNode.isMissingNode()) {
+            metadata = objectMapper.treeToValue(pageNode, PageMetadata.class);
+        }
+
+        return new PagedResult<>(authors, metadata);
+
+    } catch (Exception e) {
+        System.err.println("Error fetching paginated authors: " + e.getMessage());
+        e.printStackTrace();
+        return new PagedResult<>(Collections.emptyList(), null);
     }
+}
 }
