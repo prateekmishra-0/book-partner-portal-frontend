@@ -2,7 +2,6 @@ let jobDataMap = {};
 const params = new URLSearchParams(window.location.search);
 const empId = params.get('id');
 
-// Global utility for Tailwind modals
 window.toggleModal = function(modalID) {
     const modal = document.getElementById(modalID);
     if (modal) modal.classList.toggle('hidden');
@@ -62,12 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Delete Execution Logic for Profile Page
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
         fetch(`/ui-api/employees/${empId}`, { method: 'DELETE' })
             .then(response => {
                 if (response.status === 204 || response.ok) {
-                    // Success! Redirect back to the master list
                     window.location.href = '/employees';
                 } else {
                     alert("Failed to delete. The server rejected the request.");
@@ -80,7 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// DATA LOADING
 function loadEmployeeDetails() {
     const container = document.getElementById('detailsContainer');
     fetch(`/ui-api/employees/${empId}`)
@@ -98,6 +94,9 @@ function loadEmployeeDetails() {
             const fullName = `${emp.fname}${middleInitial} ${emp.lname}`;
             const jobDesc = emp.job ? emp.job.jobDesc : 'Data Missing';
             const pubName = emp.publisher ? emp.publisher.pubName : 'Data Missing';
+
+            // Format date for display and the modal
+            const formattedHireDate = emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown Date';
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -119,7 +118,7 @@ function loadEmployeeDetails() {
                                     <i class="fas fa-calendar-alt text-indigo-400 w-6 mt-1"></i> 
                                     <div>
                                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Hire Date</span>
-                                        <span class="block font-medium mt-1 text-slate-800">${new Date(emp.hireDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        <span class="block font-medium mt-1 text-slate-800">${formattedHireDate}</span>
                                     </div>
                                 </li>
                             </ul>
@@ -182,9 +181,14 @@ function loadEmployeeDetails() {
                 openEditModal(empId);
             });
 
-            // Pass the name to the Modal and Open it
+            // Populate the detailed modal card
             document.getElementById('openDeleteBtn').addEventListener('click', () => {
                 document.getElementById('deleteEmpNameModal').innerText = fullName;
+                document.getElementById('deleteEmpIdModal').innerText = empId;
+
+                const shortDate = emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown';
+                document.getElementById('deleteEmpDateModal').innerText = shortDate;
+
                 toggleModal('deleteConfirmModal');
             });
         })
@@ -234,7 +238,6 @@ function openEditModal(id) {
         .catch(err => alert("Failed to fetch employee details."));
 }
 
-// HELPERS
 function populateDropdowns() {
     fetch('/ui-api/employees/reference/jobs')
         .then(res => res.json())

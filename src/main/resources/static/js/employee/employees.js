@@ -4,11 +4,10 @@ let prevUrl = null;
 let nextUrl = null;
 let debounceTimer;
 let jobDataMap = {};
-let currentDeleteUrl = null; // Stores URL for the delete modal
+let currentDeleteUrl = null;
 
 const empIdRegex = /^([A-Z]{3}[1-9][0-9]{4}[FM]|[A-Z]-[A-Z][1-9][0-9]{4}[FM])$/;
 
-// Global utility for Tailwind modals
 window.toggleModal = function(modalID) {
     const modal = document.getElementById(modalID);
     if (modal) modal.classList.toggle('hidden');
@@ -18,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     populateDropdowns();
     fetchEmployees(currentUrl);
 
-    // Master List Controls & Search
     document.getElementById('sizeSelect').addEventListener('change', handleSearch);
     document.getElementById('searchFname').addEventListener('input', handleSearch);
     document.getElementById('searchLname').addEventListener('input', handleSearch);
@@ -35,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('prevBtn').addEventListener('click', () => { if (prevUrl) fetchEmployees(prevUrl); });
     document.getElementById('nextBtn').addEventListener('click', () => { if (nextUrl) fetchEmployees(nextUrl); });
 
-    // ADD Employee Logic
     const addModal = document.getElementById('addEmployeeModal');
     const addForm = document.getElementById('addEmployeeForm');
 
@@ -106,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Delete Execution Logic via the Tailwind Modal
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
         if (currentDeleteUrl) {
             const cleanUrl = currentDeleteUrl.split('{')[0];
@@ -129,7 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Shared Helpers
 function updateJobLevelHelp(jobId, inputElement, helpTextElement) {
     if (jobId && jobDataMap[jobId]) {
         const min = jobDataMap[jobId].minLvl;
@@ -188,18 +183,43 @@ function populateDropdowns() {
         });
 }
 
-// Action Buttons
 window.viewDetails = function(url) {
     const cleanUrl = url.split('{')[0];
     const id = cleanUrl.split('/').pop();
     window.location.href = `/employee-details?id=${id}`;
 };
 
+// 🔧 FIX: Now specifically routes through the proxy controller to parse the date properly!
 window.prepareDelete = function(url, empName, event) {
     event.stopPropagation();
     currentDeleteUrl = url;
+
+    const cleanUrl = url.split('{')[0];
+    const empId = cleanUrl.split('/').pop();
+
     document.getElementById('deleteEmpNameModal').innerText = empName;
+    document.getElementById('deleteEmpIdModal').innerText = empId;
+    document.getElementById('deleteEmpDateModal').innerHTML = '<i class="fas fa-spinner fa-spin text-slate-300"></i>';
     toggleModal('deleteConfirmModal');
+
+    // Routing through /ui-api/ ensures we get the nicely formatted JSON
+    fetch(`/ui-api/employees/${empId}`)
+        .then(res => res.json())
+        .then(emp => {
+            if (emp.hireDate) {
+                const dateObj = new Date(emp.hireDate);
+                if (!isNaN(dateObj)) {
+                    document.getElementById('deleteEmpDateModal').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                } else {
+                    document.getElementById('deleteEmpDateModal').innerText = 'Invalid Date format';
+                }
+            } else {
+                document.getElementById('deleteEmpDateModal').innerText = 'Date Unknown';
+            }
+        })
+        .catch(() => {
+            document.getElementById('deleteEmpDateModal').innerText = 'Error fetching date';
+        });
 };
 
 function handleSearch() {
@@ -245,17 +265,20 @@ function renderTable(employees) {
         let middleInitial = (emp.minit && emp.minit.trim() !== '') ? ` ${emp.minit.trim()}.` : '';
         let fullName = `${emp.fname}${middleInitial} ${emp.lname}`;
 
-        let row = `<tr class="hover:bg-slate-50 transition group cursor-pointer" onclick="viewDetails('${emp._links.self.href}')">
-            <td class="p-4 font-bold text-slate-800 group-hover:text-indigo-600 transition">${emp.fname}${middleInitial}</td>
+        // 🎨 UI FIX: Restored the red background to match the dustbin design exactly
+        let row = `<tr title="Click to view employee profile" class="hover:bg-slate-50 transition-all duration-200 group cursor-pointer" onclick="viewDetails('${emp._links.self.href}')">
+            <td class="p-4 font-bold text-slate-800 group-hover:text-indigo-600 transition relative">
+                ${emp.fname}${middleInitial}
+                <i class="fas fa-chevron-right absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-indigo-400 text-xs"></i>
+            </td>
             <td class="p-4 text-sm font-medium text-slate-700">${emp.lname}</td>
             <td class="p-4 text-center text-sm font-medium text-slate-700">
                 <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-md font-mono text-xs">${emp.jobLvl}</span>
             </td>
             <td class="p-4 text-center" onclick="event.stopPropagation()">
-                <div class="flex items-center justify-center space-x-2">
-                    <button onclick="viewDetails('${emp._links.self.href}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-eye mr-1"></i> View</button>
-                    <button onclick="prepareDelete('${emp._links.self.href}', '${fullName.replace(/'/g, "\\'")}', event)" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-trash-alt mr-1"></i> Delete</button>
-                </div>
+                <button title="Delete Employee" onclick="prepareDelete('${emp._links.self.href}', '${fullName.replace(/'/g, "\\'")}', event)" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-3 rounded-lg text-sm transition shadow-sm inline-flex items-center justify-center">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </td>
         </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);
