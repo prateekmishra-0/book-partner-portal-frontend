@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Controller
@@ -20,7 +21,6 @@ public class StoreController {
                 .build();
     }
 
-    // --- 1. DISPLAY STORES & SEARCH ---
     @GetMapping("/stores")
     public String showStoresPage(
             @RequestParam(required = false) String searchType,
@@ -30,16 +30,11 @@ public class StoreController {
         StoreResponse response;
 
         if (searchType != null && searchKeyword != null && !searchKeyword.isBlank()) {
-
-            // NEW: Use UriComponentsBuilder for safe URL encoding!
-            // This safely translates spaces into "%20" so the backend can read them.
             String safeUrl = UriComponentsBuilder.fromPath("/api/stores/search/" + searchType)
                     .queryParam(searchType, searchKeyword.trim())
                     .build()
                     .toUriString();
-
             response = restClient.get().uri(safeUrl).retrieve().body(StoreResponse.class);
-
         } else {
             response = restClient.get().uri("/api/stores").retrieve().body(StoreResponse.class);
         }
@@ -55,56 +50,91 @@ public class StoreController {
         return "stores/stores_list";
     }
 
-    // --- 2. CATCH THE FORM SUBMISSION (ADD NEW STORE) ---
     @PostMapping("/stores/add")
-    public String addStore(@ModelAttribute Store newStore) {
+    public String addStore(@ModelAttribute Store newStore, RedirectAttributes redirectAttributes) {
+
+        // 1. SANITIZE THE DATA: Convert empty strings to actual nulls
+        // This prevents the backend's strict Regex validations from panicking over empty boxes
+        if (newStore.getZip() != null && newStore.getZip().trim().isEmpty()) {
+            newStore.setZip(null);
+        }
+        if (newStore.getState() != null && newStore.getState().trim().isEmpty()) {
+            newStore.setState(null);
+        }
+
+        if (newStore.getState() != null) {
+            newStore.setState(newStore.getState().toUpperCase());
+        }
+
         try {
-            // Send the filled-out Store object to your backend as JSON
             restClient.post()
                     .uri("/api/stores")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(newStore)
                     .retrieve()
                     .toBodilessEntity();
+
+            redirectAttributes.addFlashAttribute("successMessage", "Store '" + newStore.getStorName() + "' was successfully added!");
+
+        } catch (org.springframework.web.client.HttpClientErrorException.BadRequest e) {
+            // 2. Catch 400 Bad Request (Validation Errors from the backend)
+            redirectAttributes.addFlashAttribute("duplicateIdError", "Validation Failed: Please check your formatting (e.g., Zip must be 5 digits).");
+            redirectAttributes.addFlashAttribute("newStore", newStore);
+
         } catch (Exception e) {
-            System.out.println("Error creating store: " + e.getMessage());
-            // It will print the 409 Conflict here if you try to add a duplicate ID!
+            // 3. Catch 500 Errors (Database panic for Duplicate IDs)
+            redirectAttributes.addFlashAttribute("duplicateIdError", "Action Failed: This Store ID already exists.");
+            redirectAttributes.addFlashAttribute("newStore", newStore);
         }
 
-        // Instantly refresh the page to show the new data in the table
         return "redirect:/stores";
     }
 
-    // --- 3. DELETE STORE ---
     @GetMapping("/stores/delete/{id}")
-    public String deleteStore(@PathVariable String id) {
+    public String deleteStore(@PathVariable String id, RedirectAttributes redirectAttributes) {
         try {
-            restClient.delete()
-                    .uri("/api/stores/" + id)
-                    .retrieve()
-                    .toBodilessEntity();
+            restClient.delete().uri("/api/stores/" + id).retrieve().toBodilessEntity();
+            redirectAttributes.addFlashAttribute("successMessage", "Store deleted successfully.");
         } catch (Exception e) {
-            System.out.println("Error deleting store: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete store.");
         }
-        // Instantly refresh the page so the deleted store disappears
         return "redirect:/stores";
     }
 
-    // --- 4. UPDATE STORE ---
     @PostMapping("/stores/edit")
-    public String editStore(@ModelAttribute Store updatedStore) {
+    public String editStore(@ModelAttribute Store updatedStore, RedirectAttributes redirectAttributes) {
+
+        // 1. SANITIZE THE DATA: Convert empty strings to actual nulls
+        // This stops the backend Regex from panicking when a user clears a field
+        if (updatedStore.getZip() != null && updatedStore.getZip().trim().isEmpty()) {
+            updatedStore.setZip(null);
+        }
+        if (updatedStore.getState() != null && updatedStore.getState().trim().isEmpty()) {
+            updatedStore.setState(null);
+        }
+
+        if (updatedStore.getState() != null) {
+            updatedStore.setState(updatedStore.getState().toUpperCase());
+        }
+
+
         try {
-            // We use PATCH here to update existing data
             restClient.patch()
                     .uri("/api/stores/" + updatedStore.getStorId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(updatedStore)
                     .retrieve()
                     .toBodilessEntity();
+            redirectAttributes.addFlashAttribute("successMessage", "Store updated successfully!");
+
+        } catch (org.springframework.web.client.HttpClientErrorException.BadRequest e) {
+            // 2. Catch 400 Bad Request (Validation Errors from the backend)
+            redirectAttributes.addFlashAttribute("errorMessage", "Update Failed: Please check your formatting (e.g., Zip must be 5 digits).");
         } catch (Exception e) {
-            System.out.println("Error updating store: " + e.getMessage());
+            // 3. Catch generic 500 Errors
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update store.");
         }
-        // Instantly refresh the page to see the changes
+
         return "redirect:/stores";
     }
 }

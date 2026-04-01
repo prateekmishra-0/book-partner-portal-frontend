@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    // Initialize DataTables
+    // 1. Initialize DataTables
     $('#storeTable').DataTable({
         "pageLength": 10,
         "ordering": true,
@@ -12,6 +12,23 @@ $(document).ready(function() {
         "language": {
             "search": "Search Anything:"
         }
+    });
+
+    // 2. Auto-open the Add Modal if there is a validation error from the backend
+    if ($('#addStoreModal .is-invalid').length > 0) {
+        var addModal = new bootstrap.Modal(document.getElementById('addStoreModal'));
+        addModal.show();
+    }
+
+    // 3. Remove the red warning the second the user starts typing to fix their mistake
+    $('#addStoreModal .is-invalid').on('input', function() {
+        $(this).removeClass('is-invalid');
+    });
+
+    // 4. Wipe the form completely clean when the user clicks Cancel or closes the modal
+    $('#addStoreModal').on('hidden.bs.modal', function () {
+        $(this).find('form')[0].reset(); // Empties all the text boxes
+        $(this).find('.is-invalid').removeClass('is-invalid'); // Removes the red outline and error text
     });
 });
 

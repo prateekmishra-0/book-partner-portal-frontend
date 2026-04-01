@@ -6,6 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,12 +40,14 @@ public class SalesController {
         }
 
         model.addAttribute("newSale", new Sale());
-        return "stores/sales/sales_list";
+
+        // This is perfectly correct based on your new folder structure!
+        return "sales/sales_list";
     }
 
-    // --- FIX: ADD SALE ---
+    // --- UPGRADED: ADD SALE ---
     @PostMapping("/stores/{id}/sales/add")
-    public String addSale(@PathVariable String id, @ModelAttribute Sale newSale, @RequestParam String titleId) {
+    public String addSale(@PathVariable String id, @ModelAttribute Sale newSale, @RequestParam String titleId, RedirectAttributes redirectAttributes) {
 
         String formattedDate = newSale.getOrdDate();
         if (formattedDate != null && !formattedDate.contains("T")) {
@@ -51,14 +55,13 @@ public class SalesController {
         }
         String safePayTerms = (newSale.getPayterms() != null && !newSale.getPayterms().trim().isEmpty()) ? newSale.getPayterms() : "Net 30";
 
-        // FIX: Build the Composite ID Object exactly how the backend expects it
         Map<String, Object> compositeId = new HashMap<>();
         compositeId.put("storId", id);
         compositeId.put("ordNum", newSale.getOrdNum());
         compositeId.put("titleId", titleId);
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("id", compositeId); // <-- This prevents the "Null id generated" error!
+        requestBody.put("id", compositeId);
         requestBody.put("ordDate", formattedDate);
         requestBody.put("qty", newSale.getQty());
         requestBody.put("payterms", safePayTerms);
@@ -67,33 +70,36 @@ public class SalesController {
 
         try {
             restClient.post().uri("/api/sales").contentType(MediaType.APPLICATION_JSON).body(requestBody).retrieve().toBodilessEntity();
+            redirectAttributes.addFlashAttribute("successMessage", "Sale successfully recorded!");
         } catch (Exception e) {
-            System.out.println("Error adding sale: " + e.getMessage());
+            // Now the user will actually see the error!
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to save: Quantity may exceed limits or Order Number already exists.");
         }
         return "redirect:/stores/" + id + "/sales";
     }
 
-    // --- NEW: EDIT SALE ---
+    // --- UPGRADED: EDIT SALE ---
     @PostMapping("/stores/{id}/sales/edit")
     public String editSale(@PathVariable String id,
                            @RequestParam String compositeId,
                            @RequestParam Integer qty,
-                           @RequestParam String payterms) {
+                           @RequestParam String payterms,
+                           RedirectAttributes redirectAttributes) {
 
-        // We only allow changing Quantity and Pay Terms (just like your old code logic!)
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("qty", qty);
         requestBody.put("payterms", payterms);
 
         try {
-            restClient.patch() // PATCH updates only the specific fields
+            restClient.patch()
                     .uri("/api/sales/" + compositeId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestBody)
                     .retrieve()
                     .toBodilessEntity();
+            redirectAttributes.addFlashAttribute("successMessage", "Sale successfully updated!");
         } catch (Exception e) {
-            System.out.println("Error editing sale: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update sale. Check your values.");
         }
         return "redirect:/stores/" + id + "/sales";
     }
