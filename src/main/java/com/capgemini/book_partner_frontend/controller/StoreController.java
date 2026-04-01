@@ -10,11 +10,18 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Controller responsible for managing Partner Stores UI interactions.
+ * Acts as a frontend client communicating with the backend REST API.
+ */
 @Controller
 public class StoreController {
 
     private final RestClient restClient;
 
+    /**
+     * Initializes the REST client with the backend API base URL.
+     */
     public StoreController() {
         this.restClient = RestClient.builder()
                 .baseUrl("http://localhost:8080")
@@ -30,15 +37,18 @@ public class StoreController {
         StoreResponse response;
 
         if (searchType != null && searchKeyword != null && !searchKeyword.isBlank()) {
+            // Build safe URI for custom search endpoints
             String safeUrl = UriComponentsBuilder.fromPath("/api/stores/search/" + searchType)
                     .queryParam(searchType, searchKeyword.trim())
                     .build()
                     .toUriString();
             response = restClient.get().uri(safeUrl).retrieve().body(StoreResponse.class);
         } else {
+            // Retrieve default collection if no search parameters are provided
             response = restClient.get().uri("/api/stores").retrieve().body(StoreResponse.class);
         }
 
+        // Initialize an empty form object unless one was passed via redirect attributes (on error)
         if (response != null && response.get_embedded() != null) {
             model.addAttribute("storesList", response.get_embedded().getStores());
         }

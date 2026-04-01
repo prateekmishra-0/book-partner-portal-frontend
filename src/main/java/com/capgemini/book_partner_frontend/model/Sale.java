@@ -10,7 +10,7 @@ public class Sale {
     private String ordDate;
     private Integer qty;
     private String payterms;
-    private Double totalAmount; // This is the calculated math field!
+    private Double totalAmount; //calculated math field
 
     // Catches the nested "title" object in the JSON
     private TitleInfo title;

@@ -41,11 +41,10 @@ public class SalesController {
 
         model.addAttribute("newSale", new Sale());
 
-        // This is perfectly correct based on your new folder structure!
         return "sales/sales_list";
     }
 
-    // --- UPGRADED: ADD SALE ---
+    // --- ADD SALE ---
     @PostMapping("/stores/{id}/sales/add")
     public String addSale(@PathVariable String id, @ModelAttribute Sale newSale, @RequestParam String titleId, RedirectAttributes redirectAttributes) {
 
@@ -78,7 +77,7 @@ public class SalesController {
         return "redirect:/stores/" + id + "/sales";
     }
 
-    // --- UPGRADED: EDIT SALE ---
+    // --- EDIT SALE ---
     @PostMapping("/stores/{id}/sales/edit")
     public String editSale(@PathVariable String id,
                            @RequestParam String compositeId,

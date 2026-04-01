@@ -3,10 +3,12 @@ package com.capgemini.book_partner_frontend.model;
 import lombok.Data;
 import java.util.Map;
 
+/**
+ * Data Transfer Object (DTO) representing a Partner Store.
+ * Used for binding form data from the UI and mapping JSON responses from the REST API.
+ */
 @Data
 public class Store {
-
-    // Added to catch the ID when you type it into the HTML form
     private String storId;
 
     private String storName;
@@ -15,14 +17,25 @@ public class Store {
     private String state;
     private String zip;
 
+    // Captures HATEOAS links provided by Spring Data REST
     private Map<String, Map<String, String>> _links;
 
+    /**
+     * Resolves the Store ID.
+     * Since Spring Data REST often hides the primary key in the HATEOAS links,
+     * this method acts as a fallback to extract the ID from the self-referencing URI
+     * if it wasn't explicitly provided by a form submission.
+     *
+     * @return The extracted or explicit Store ID.
+     */
+
     public String getStorId() {
-        // 1. If you typed the ID in the HTML form, use that!
+        // Return explicitly bound ID (e.g., from an HTML form submission)
         if (this.storId != null && !this.storId.isEmpty()) {
             return this.storId;
         }
-        // 2. If we are just reading data from the backend, slice it from the URL
+
+        // Extract ID from the Spring Data REST self-link
         if (_links != null && _links.containsKey("self")) {
             String href = _links.get("self").get("href");
             return href.substring(href.lastIndexOf("/") + 1);
