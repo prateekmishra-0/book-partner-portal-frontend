@@ -2,68 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Employee Profile</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Profile | PubsPortal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .hero-gradient { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+        dialog::backdrop { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); }
+        dialog { border: none; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 0; max-width: 32rem; width: 100%; }
+    </style>
 </head>
-<body>
+<body class="bg-slate-50 font-sans text-slate-800">
 
-<div class="app-container" style="max-width: 800px;">
-    <h2>Employee Profile</h2>
+<nav class="sticky top-0 z-40 glass shadow-sm px-6 py-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-book-open text-indigo-600 text-2xl"></i>
+                <span class="text-xl font-bold tracking-tight text-slate-800">Pubs<span class="text-indigo-600">Portal</span></span>
+            </div>
+        </a>
+    </div>
+</nav>
+
+<main class="py-10 px-6 max-w-5xl mx-auto">
+
+    <nav class="mb-8" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm font-medium text-slate-500 overflow-x-auto pb-2 sm:pb-0">
+            <li><a href="/" class="hover:text-indigo-600 transition flex items-center whitespace-nowrap"><i class="fas fa-home mr-1.5 mb-0.5"></i> Home</a></li>
+            <li><i class="fas fa-chevron-right text-[10px] text-slate-400 mt-0.5"></i></li>
+            <li><a href="/employees" class="hover:text-indigo-600 transition whitespace-nowrap">Employees Directory</a></li>
+            <li><i class="fas fa-chevron-right text-[10px] text-slate-400 mt-0.5"></i></li>
+            <li class="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-none" aria-current="page">Employee Profile</li>
+        </ol>
+    </nav>
 
     <div id="detailsContainer">
-        <p>Loading employee data...</p>
+        <p class="text-slate-500 animate-pulse"><i class="fas fa-spinner fa-spin mr-2"></i>Loading employee data...</p>
     </div>
 
-    <div style="display: flex; gap: 15px; margin-top: 25px;">
-        <button onclick="window.history.back()" style="background-color: #6c757d;">&larr; Back to Directory</button>
-        <button id="openEditBtn" style="display: none;">Edit Employee Details</button>
-    </div>
-</div>
+</main>
 
 <dialog id="editEmployeeModal">
-    <h3>Edit Employee</h3>
-    <form id="editEmployeeForm">
-        <div>
-            <label for="editEmpId">Employee ID (Locked):</label>
-            <input type="text" id="editEmpId" readonly style="background-color: #e9ecef; border: 1px solid #ccc; color: #666; cursor: not-allowed; width: 150px;">
+    <div class="bg-white">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-user-edit text-indigo-500 mr-2"></i> Update Profile</h2>
+            <button type="button" id="closeEditModalBtn" class="text-slate-400 hover:text-slate-700 p-2"><i class="fas fa-times text-lg"></i></button>
         </div>
-        <div>
-            <label for="editFname">First Name:*</label>
-            <input type="text" id="editFname" required maxlength="20">
+        <div class="p-6">
+            <form id="editEmployeeForm" class="space-y-4 text-sm">
+                <div>
+                    <label for="editEmpId" class="block font-semibold text-slate-700 mb-1">Employee ID (Locked)</label>
+                    <input type="text" id="editEmpId" readonly class="w-full rounded-xl border-slate-200 bg-slate-100 text-slate-500 p-3 cursor-not-allowed outline-none font-mono">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="editFname" class="block font-semibold text-slate-700 mb-1">First Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="editFname" required maxlength="20" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="editLname" class="block font-semibold text-slate-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="editLname" required maxlength="30" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="editMinit" class="block font-semibold text-slate-700 mb-1">Middle Initial</label>
+                    <input type="text" id="editMinit" maxlength="1" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition uppercase">
+                </div>
+
+                <div>
+                    <label for="editJobSelect" class="block font-semibold text-slate-700 mb-1">Job Role <span class="text-red-500">*</span></label>
+                    <select id="editJobSelect" required class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <option value="">Select a Job</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="editJobLvl" class="block font-semibold text-slate-700 mb-1">Job Level <span class="text-red-500">*</span></label>
+                    <input type="number" id="editJobLvl" required class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    <span id="editJobLvlError" style="display: none;" class="text-red-500 text-xs font-bold mt-1 block">Invalid level.</span>
+                    <div id="editJobLvlHelp" class="text-xs text-slate-500 mt-1">Select a job role to see allowed levels.</div>
+                </div>
+
+                <div>
+                    <label for="editPubSelect" class="block font-semibold text-slate-700 mb-1">Publisher <span class="text-red-500">*</span></label>
+                    <select id="editPubSelect" required class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <option value="">Select a Publisher</option>
+                    </select>
+                </div>
+
+                <div id="editFormErrorMsg" style="display: none;" class="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-xs font-bold"></div>
+
+                <div class="pt-4 flex justify-end border-t border-slate-100 mt-6">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-md">Update Details</button>
+                </div>
+            </form>
         </div>
-        <div>
-            <label for="editMinit">Middle Initial (optional):</label>
-            <input type="text" id="editMinit" maxlength="1">
-        </div>
-        <div>
-            <label for="editLname">Last Name:*</label>
-            <input type="text" id="editLname" required maxlength="30">
-        </div>
-        <div>
-            <label for="editJobSelect">Job Role:*</label>
-            <select id="editJobSelect" required>
-                <option value="">Select a Job</option>
-            </select>
-        </div>
-        <div>
-            <label for="editJobLvl">Job Level:*</label>
-            <input type="number" id="editJobLvl" required>
-            <span id="editJobLvlError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid level.</span>
-            <div id="editJobLvlHelp" style="font-size: 0.85em; color: #555; margin-top: 5px;">Select a job role to see allowed levels.</div>
-        </div>
-        <div>
-            <label for="editPubSelect">Publisher:*</label>
-            <select id="editPubSelect" required>
-                <option value="">Select a Publisher</option>
-            </select>
-        </div>
-        <div style="margin-top: 20px;">
-            <button type="submit">Update Details</button>
-            <button type="button" id="closeEditModalBtn" style="background-color: #6c757d;">Cancel</button>
-        </div>
-        <div id="editFormErrorMsg" style="color: var(--danger-color); display: none; margin-top: 10px;">Please fix highlighted errors.</div>
-    </form>
+    </div>
 </dialog>
+
+<div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl shadow-inner">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Delete Employee?</h2>
+        <p class="text-slate-500 mb-4 text-sm">This action cannot be undone.</p>
+
+        <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left border border-slate-200">
+            <div class="font-bold text-slate-800 text-base mb-2 truncate" id="deleteEmpNameModal"></div>
+            <div class="text-xs text-slate-500 flex justify-between items-center">
+                <span class="bg-white px-2 py-1 rounded border border-slate-200 font-mono text-slate-600" id="deleteEmpIdModal"></span>
+                <span class="font-medium text-slate-600"><i class="fas fa-calendar-alt mr-1 text-slate-400"></i> <span id="deleteEmpDateModal"></span></span>
+            </div>
+        </div>
+
+        <div class="flex space-x-3">
+            <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Cancel</button>
+            <button type="button" id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Delete</button>
+        </div>
+    </div>
+</div>
 
 <script src="/js/employee/employee-details.js"></script>
 </body>

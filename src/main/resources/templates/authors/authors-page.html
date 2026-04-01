@@ -46,7 +46,7 @@
             <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
                 <a href="/" class="hover:text-indigo-600 transition">Dashboard Home</a>
                 <span class="text-slate-300">|</span>
-                <a href="/api" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-bold">Explore API <i class="fas fa-external-link-alt ml-1"></i></a>
+                <a href="/api-docs" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-bold">Explore API <i class="fas fa-external-link-alt ml-1"></i></a>
             </div>
         </div>
     </nav>
@@ -124,7 +124,7 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                             <th class="p-4 font-bold">
-                                <a th:href="@{/authors(page=0, size=${currentSize}, searchBy=${searchBy}, keyword=${keyword}, sort='firstName', dir=${sort == 'firstName' ? reverseDir : 'asc'})}" class="flex items-center hover:text-indigo-800 transition">
+                                <a th:href="@{/authors(page=0, size=${currentSize}, searchBy=${searchBy}, keyword=${keyword}, sort='firstName', dir=${sort == 'firstName' ? reverseDir : 'asc'})}" class="flex  items-center hover:text-indigo-800 transition">
                                     Author Name
                                     <i class="fas ml-2" th:classappend="${sort == 'firstName'} ? (${dir == 'asc'} ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort text-slate-300'"></i>
                                 </a>
@@ -166,8 +166,8 @@
                             </td>
                             <td class="p-4 text-center" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center space-x-2">
-                                    <a th:href="@{/authors/{id}(id=${author.auId})}" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-eye mr-1"></i> View</a>
-                                    <button type="button" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm" th:data-id="${author.auId}" th:data-name="${author.firstName + ' ' + author.lastName}" onclick="prepareDelete(this, event)"><i class="fas fa-trash-alt mr-1"></i> Delete</button>
+                                    <!-- <a th:href="@{/authors/{id}(id=${author.auId})}" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-eye mr-1"></i> View</a> -->
+                                    <button type="button" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm" th:data-id="${author.auId}" th:data-name="${author.firstName + ' ' + author.lastName}" onclick="prepareDelete(this, event)"><i class="fas fa-trash-alt mr-1"></i> </button>
                                 </div>
                             </td>
                         </tr>
