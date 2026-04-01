@@ -1,6 +1,7 @@
 package com.capgemini.book_partner_frontend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +20,19 @@ import com.capgemini.book_partner_frontend.DTO.publisher.PagedResult;
 import com.capgemini.book_partner_frontend.DTO.publisher.PublisherDto;
 import com.capgemini.book_partner_frontend.DTO.publisher.PublisherTitleDto;
 import com.capgemini.book_partner_frontend.service.PublisherClientService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/publishers")
 public class PublisherFrontendController {
 
     private final PublisherClientService publisherClientService;
+    private final ObjectMapper objectMapper;
 
-    public PublisherFrontendController(PublisherClientService publisherClientService) {
+    public PublisherFrontendController(PublisherClientService publisherClientService, ObjectMapper objectMapper) {
         this.publisherClientService = publisherClientService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -74,14 +79,36 @@ public class PublisherFrontendController {
             redirectAttributes.addFlashAttribute("messageType", "success");
             return ResponseEntity.ok("Success");
         } catch (HttpClientErrorException.Conflict e) {
-            System.out.println(e.getResponseBodyAsString());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getResponseBodyAsString());
+            String cleanMessage = extractErrorMessage(e.getResponseBodyAsString(), "A publisher with this ID already exists.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(cleanMessage);
         }catch(HttpClientErrorException.BadRequest e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getResponseBodyAsString());
+            String cleanMessage = extractErrorMessage(e.getResponseBodyAsString(), "Invalid input. Please check your values.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cleanMessage);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Could not create publisher. Please try again.");
+        }
+    }
+
+    private String extractErrorMessage(String rawBody, String fallbackMessage) {
+        if (rawBody == null || rawBody.isBlank()) {
+            return fallbackMessage;
+        }
+
+        String body = rawBody.trim();
+
+        try {
+            if (body.startsWith("{")) {
+                Map<String, Object> fieldErrors = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
+                if (!fieldErrors.isEmpty()) {
+                    Object firstValue = fieldErrors.values().iterator().next();
+                    if (firstValue != null) {
+                        return firstValue.toString();
+                    }
+                }
+            }
+            return body.replace("\"", "");
+        } catch (Exception ex) {
+            return fallbackMessage;
         }
     }
 

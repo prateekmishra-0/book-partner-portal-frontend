@@ -360,6 +360,26 @@
             setTimeout(hideToast, 4000);
         }
 
+        function parseApiErrorMessage(raw) {
+            if (!raw || !raw.trim()) {
+                return 'Failed to save publisher.';
+            }
+
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    const firstValue = Object.values(parsed)[0];
+                    if (firstValue) {
+                        return String(firstValue);
+                    }
+                }
+            } catch (err) {
+                // Keep original text if it's not JSON.
+            }
+
+            return raw.replaceAll('"', '').trim();
+        }
+
         async function handlePublisherSubmit(event) {
             event.preventDefault();
             const form = event.target;
@@ -375,7 +395,7 @@
                     window.location.href = '/publishers?added=true';
                 } else {
                     const errorText = await response.text();
-                    showErrorToast(errorText || 'Failed to save publisher.');
+                    showErrorToast(parseApiErrorMessage(errorText));
                 }
             } catch (err) {
                 showErrorToast('Network error. Try again.');
