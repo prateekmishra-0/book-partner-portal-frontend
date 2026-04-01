@@ -57,7 +57,7 @@ public class PublisherFrontendController {
         model.addAttribute("reverseDir", dir.equals("asc") ? "desc" : "asc");
         model.addAttribute("newPublisher", new PublisherDto());
 
-        return "publishers-page";
+        return "publisher/publishers-page";
     }
 
     @GetMapping("/{id}")
@@ -67,7 +67,7 @@ public class PublisherFrontendController {
 
         model.addAttribute("publisher", publisher);
         model.addAttribute("titleList", titles);
-        return "publisher-details";
+        return "publisher/publisher-details";
     }
 
     @PostMapping("/add")
