@@ -57,7 +57,23 @@
         </div>
     </header>
 
-    <main class="py-10 px-6 max-w-7xl mx-auto">
+    <main class="py-6 px-6 max-w-7xl mx-auto">
+        <nav class="mb-8" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm font-medium text-slate-500">
+                <li>
+                    <a href="/" class="hover:text-indigo-600 transition flex items-center">
+                        <i class="fas fa-home mr-1.5 mb-0.5"></i> Home
+                    </a>
+                </li>
+                <li>
+                    <i class="fas fa-chevron-right text-[10px] text-slate-400 mt-0.5"></i>
+                </li>
+                <li class="text-slate-800" aria-current="page">
+                    Publishers Directory
+                </li>
+            </ol>
+        </nav>
+
         <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
             <form th:action="@{/publishers}" method="get" class="w-full sm:w-auto flex flex-wrap sm:flex-nowrap gap-3 p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
                 <div class="relative min-w-[140px]">
