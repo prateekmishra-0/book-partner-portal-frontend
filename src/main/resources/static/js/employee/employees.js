@@ -4,17 +4,21 @@ let prevUrl = null;
 let nextUrl = null;
 let debounceTimer;
 let jobDataMap = {};
+let currentDeleteUrl = null; // Stores URL for the delete modal
 
 const empIdRegex = /^([A-Z]{3}[1-9][0-9]{4}[FM]|[A-Z]-[A-Z][1-9][0-9]{4}[FM])$/;
 
+// Global utility for Tailwind modals
+window.toggleModal = function(modalID) {
+    const modal = document.getElementById(modalID);
+    if (modal) modal.classList.toggle('hidden');
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-    // PRE-LOAD DROPDOWNS: Fetch jobs and publishers immediately so they are ready for the Add modal
     populateDropdowns();
     fetchEmployees(currentUrl);
 
-    // ==========================================
     // Master List Controls & Search
-    // ==========================================
     document.getElementById('sizeSelect').addEventListener('change', handleSearch);
     document.getElementById('searchFname').addEventListener('input', handleSearch);
     document.getElementById('searchLname').addEventListener('input', handleSearch);
@@ -31,9 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('prevBtn').addEventListener('click', () => { if (prevUrl) fetchEmployees(prevUrl); });
     document.getElementById('nextBtn').addEventListener('click', () => { if (nextUrl) fetchEmployees(nextUrl); });
 
-    // ==========================================
     // ADD Employee Logic
-    // ==========================================
     const addModal = document.getElementById('addEmployeeModal');
     const addForm = document.getElementById('addEmployeeForm');
 
@@ -50,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('closeAddModalBtn').addEventListener('click', () => addModal.close());
 
-    // Add Form - Dynamic Job Level Help
     document.getElementById('newJobSelect').addEventListener('change', (e) => {
         updateJobLevelHelp(e.target.value, document.getElementById('newJobLvl'), document.getElementById('jobLvlHelp'));
     });
@@ -62,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const empIdInput = document.getElementById('newEmpId');
         if (!empIdRegex.test(empIdInput.value.trim())) {
-            empIdInput.style.borderColor = 'red';
+            empIdInput.style.borderColor = '#ef4444';
             document.getElementById('empIdError').style.display = 'block';
             return;
         }
@@ -77,44 +78,58 @@ document.addEventListener("DOMContentLoaded", () => {
             pubId: document.getElementById('newPubSelect').value
         };
 
-        // Send POST request to Proxy
         fetch('/ui-api/employees', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newEmployee)
         }).then(async response => {
             if (response.ok || response.status === 201) {
-                // Success!
                 addModal.close();
                 fetchEmployees(currentUrl);
             } else {
-                // 1. Read the EXACT error text from the Java Server
                 const errorText = await response.text();
-
-                // 2. Bulletproof Check: If it's a 409 OR the error text mentions a duplicate
                 if (response.status === 409 || errorText.toLowerCase().includes("already exists") || errorText.toLowerCase().includes("duplicate")) {
                     const empIdError = document.getElementById('empIdError');
-                    empIdInput.style.borderColor = 'red';
+                    empIdInput.style.borderColor = '#ef4444';
                     empIdError.innerText = "This Employee ID is already taken in the database.";
                     empIdError.style.display = 'block';
                     document.getElementById('formErrorMsg').style.display = 'none';
                 } else {
-                    // 3. For any other error, print the actual server message to the screen
-                    document.getElementById('formErrorMsg').innerHTML = `<strong>Server Error ${response.status}:</strong> ${errorText || 'The server rejected the data.'}`;
+                    document.getElementById('formErrorMsg').innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> <strong>Server Error ${response.status}:</strong> ${errorText || 'The server rejected the data.'}`;
                     document.getElementById('formErrorMsg').style.display = 'block';
                 }
             }
         }).catch(error => {
             console.error("Network error:", error);
-            document.getElementById('formErrorMsg').innerText = "Network error occurred. Is the server running?";
+            document.getElementById('formErrorMsg').innerHTML = `<i class="fas fa-wifi mr-1"></i> Network error occurred. Is the server running?`;
             document.getElementById('formErrorMsg').style.display = 'block';
         });
     });
+
+    // Delete Execution Logic via the Tailwind Modal
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        if (currentDeleteUrl) {
+            const cleanUrl = currentDeleteUrl.split('{')[0];
+            const id = cleanUrl.split('/').pop();
+
+            fetch(`/ui-api/employees/${id}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.status === 204 || response.ok) {
+                        toggleModal('deleteConfirmModal');
+                        fetchEmployees(currentUrl);
+                    } else {
+                        alert("Failed to delete. The server rejected the request.");
+                        toggleModal('deleteConfirmModal');
+                    }
+                }).catch(error => {
+                alert("Network error occurred.");
+                toggleModal('deleteConfirmModal');
+            });
+        }
+    });
 });
 
-// ==========================================
-// Shared Helpers for Add Modal
-// ==========================================
+// Shared Helpers
 function updateJobLevelHelp(jobId, inputElement, helpTextElement) {
     if (jobId && jobDataMap[jobId]) {
         const min = jobDataMap[jobId].minLvl;
@@ -135,9 +150,9 @@ function validateJobLevel(jobId, inputElement, errorElement) {
         const min = jobDataMap[jobId].minLvl;
         const max = jobDataMap[jobId].maxLvl;
         if (enteredLvl < min || enteredLvl > max) {
-            inputElement.style.borderColor = 'red';
+            inputElement.style.borderColor = '#ef4444';
             errorElement.innerText = `Must be between ${min} and ${max}.`;
-            errorElement.style.display = 'inline';
+            errorElement.style.display = 'block';
             return false;
         }
     }
@@ -146,7 +161,6 @@ function validateJobLevel(jobId, inputElement, errorElement) {
     return true;
 }
 
-// Fetch Reference Data and populate Add Dropdowns
 function populateDropdowns() {
     fetch('/ui-api/employees/reference/jobs')
         .then(res => res.json())
@@ -174,34 +188,20 @@ function populateDropdowns() {
         });
 }
 
-// ==========================================
-// ACTION BUTTONS (View, Delete)
-// ==========================================
+// Action Buttons
 window.viewDetails = function(url) {
     const cleanUrl = url.split('{')[0];
     const id = cleanUrl.split('/').pop();
     window.location.href = `/employee-details?id=${id}`;
 };
 
-window.deleteEmployee = function(url) {
-    const cleanUrl = url.split('{')[0];
-    const id = cleanUrl.split('/').pop();
-
-    if (confirm(`Are you sure you want to delete employee ${id}?`)) {
-        fetch(`/ui-api/employees/${id}`, { method: 'DELETE' })
-            .then(response => {
-                if (response.status === 204 || response.ok) {
-                    fetchEmployees(currentUrl);
-                } else {
-                    alert("Failed to delete. The server rejected the request.");
-                }
-            }).catch(error => alert("Network error occurred."));
-    }
+window.prepareDelete = function(url, empName, event) {
+    event.stopPropagation();
+    currentDeleteUrl = url;
+    document.getElementById('deleteEmpNameModal').innerText = empName;
+    toggleModal('deleteConfirmModal');
 };
 
-// ==========================================
-// Core Table & Search Functions
-// ==========================================
 function handleSearch() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -238,18 +238,24 @@ function renderTable(employees) {
     const tbody = document.getElementById('employeeTableBody');
     tbody.innerHTML = '';
     if (employees.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">No employees found.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" class="p-12 text-center text-slate-500"><i class="fas fa-users-slash text-4xl text-slate-300 mb-3 block"></i>No employees found.</td></tr>`;
         return;
     }
     employees.forEach(emp => {
         let middleInitial = (emp.minit && emp.minit.trim() !== '') ? ` ${emp.minit.trim()}.` : '';
-        let row = `<tr>
-            <td>${emp.fname}${middleInitial}</td>
-            <td>${emp.lname}</td>
-            <td>${emp.jobLvl}</td>
-            <td>
-                <button onclick="viewDetails('${emp._links.self.href}')">View</button>
-                <button onclick="deleteEmployee('${emp._links.self.href}')" style="background-color: var(--danger-color);">Delete</button>
+        let fullName = `${emp.fname}${middleInitial} ${emp.lname}`;
+
+        let row = `<tr class="hover:bg-slate-50 transition group cursor-pointer" onclick="viewDetails('${emp._links.self.href}')">
+            <td class="p-4 font-bold text-slate-800 group-hover:text-indigo-600 transition">${emp.fname}${middleInitial}</td>
+            <td class="p-4 text-sm font-medium text-slate-700">${emp.lname}</td>
+            <td class="p-4 text-center text-sm font-medium text-slate-700">
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-md font-mono text-xs">${emp.jobLvl}</span>
+            </td>
+            <td class="p-4 text-center" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-center space-x-2">
+                    <button onclick="viewDetails('${emp._links.self.href}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-eye mr-1"></i> View</button>
+                    <button onclick="prepareDelete('${emp._links.self.href}', '${fullName.replace(/'/g, "\\'")}', event)" class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"><i class="fas fa-trash-alt mr-1"></i> Delete</button>
+                </div>
             </td>
         </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);
@@ -268,7 +274,7 @@ function updatePagination(data) {
         return;
     }
 
-    pageInfo.innerText = `Page ${data.page.number + 1} of ${data.page.totalPages} (Total: ${data.page.totalElements})`;
+    pageInfo.innerHTML = `Showing page <strong class="text-slate-900">${data.page.number + 1}</strong> of <strong class="text-slate-900">${data.page.totalPages}</strong> (Total: ${data.page.totalElements})`;
     if (data._links.prev) {
         prevUrl = data._links.prev.href.replace("http://localhost:8080/api", "/ui-api");
         prevBtn.disabled = false;

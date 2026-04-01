@@ -2,25 +2,23 @@ let jobDataMap = {};
 const params = new URLSearchParams(window.location.search);
 const empId = params.get('id');
 
+// Global utility for Tailwind modals
+window.toggleModal = function(modalID) {
+    const modal = document.getElementById(modalID);
+    if (modal) modal.classList.toggle('hidden');
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     if (!empId) {
-        document.getElementById('detailsContainer').innerHTML = "<p style='color: var(--danger-color); font-weight: bold;'>No Employee ID provided.</p>";
+        document.getElementById('detailsContainer').innerHTML = "<p class='text-red-500 font-bold'><i class='fas fa-exclamation-circle'></i> No Employee ID provided.</p>";
         return;
     }
 
-    // 1. Fetch dropdowns so the Edit Modal is ready behind the scenes
     populateDropdowns();
-
-    // 2. Fetch and display the employee's details
     loadEmployeeDetails();
 
-    // 3. Setup Edit Modal Listeners
     const editModal = document.getElementById('editEmployeeModal');
     const editForm = document.getElementById('editEmployeeForm');
-
-    document.getElementById('openEditBtn').addEventListener('click', () => {
-        openEditModal(empId);
-    });
 
     document.getElementById('closeEditModalBtn').addEventListener('click', () => {
         editModal.close();
@@ -33,10 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
     editForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        // Run validation
         if (!validateJobLevel(document.getElementById('editJobSelect').value, document.getElementById('editJobLvl'), document.getElementById('editJobLvlError'))) return;
 
-        // Build Payload
         const updates = {
             fname: document.getElementById('editFname').value.trim(),
             minit: document.getElementById('editMinit').value.trim() || null,
@@ -46,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
             pubId: document.getElementById('editPubSelect').value
         };
 
-        // Send PATCH request
         fetch(`/ui-api/employees/${empId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -54,30 +49,44 @@ document.addEventListener("DOMContentLoaded", () => {
         }).then(async response => {
             if (response.ok || response.status === 200) {
                 editModal.close();
-                // Magic: Refresh the profile page data instantly without a hard reload!
                 loadEmployeeDetails();
             } else {
                 const errorText = await response.text();
-                document.getElementById('editFormErrorMsg').innerHTML = `<strong>Server Error ${response.status}:</strong> ${errorText}`;
+                document.getElementById('editFormErrorMsg').innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Server Error ${response.status}:</strong> ${errorText}`;
                 document.getElementById('editFormErrorMsg').style.display = 'block';
             }
         }).catch(error => {
             console.error("Network error:", error);
-            document.getElementById('editFormErrorMsg').innerText = "Network error occurred.";
+            document.getElementById('editFormErrorMsg').innerHTML = `<i class="fas fa-wifi"></i> Network error occurred.`;
             document.getElementById('editFormErrorMsg').style.display = 'block';
+        });
+    });
+
+    // Delete Execution Logic for Profile Page
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        fetch(`/ui-api/employees/${empId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.status === 204 || response.ok) {
+                    // Success! Redirect back to the master list
+                    window.location.href = '/employees';
+                } else {
+                    alert("Failed to delete. The server rejected the request.");
+                    toggleModal('deleteConfirmModal');
+                }
+            }).catch(error => {
+            alert("Network error occurred.");
+            toggleModal('deleteConfirmModal');
         });
     });
 });
 
-// ==========================================
 // DATA LOADING
-// ==========================================
 function loadEmployeeDetails() {
     const container = document.getElementById('detailsContainer');
     fetch(`/ui-api/employees/${empId}`)
         .then(async response => {
             if (response.status === 404) {
-                throw new Error(`Employee ${empId} was not found. They may have been deleted or deactivated.`);
+                throw new Error(`Employee ${empId} was not found. They may have been deleted.`);
             }
             if (!response.ok) {
                 throw new Error(`Server returned error: ${response.status}`);
@@ -86,41 +95,107 @@ function loadEmployeeDetails() {
         })
         .then(emp => {
             const middleInitial = (emp.minit && emp.minit.trim() !== '') ? ` ${emp.minit.trim()}.` : '';
+            const fullName = `${emp.fname}${middleInitial} ${emp.lname}`;
+            const jobDesc = emp.job ? emp.job.jobDesc : 'Data Missing';
+            const pubName = emp.publisher ? emp.publisher.pubName : 'Data Missing';
+
             container.innerHTML = `
-                <table border="1" cellpadding="8" style="border-collapse: collapse; margin-top: 15px; width: 100%;">
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left; width: 30%;">Employee ID</th>
-                        <td>${empId}</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left;">Full Name</th>
-                        <td>${emp.fname}${middleInitial} ${emp.lname}</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left;">Hire Date</th>
-                        <td>${emp.hireDate}</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left;">Job Role</th>
-                        <td>${emp.job ? emp.job.jobDesc : 'Data Missing'}</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left;">Job Level</th>
-                        <td>${emp.jobLvl}</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: #f4f4f4; text-align: left;">Publisher</th>
-                        <td>${emp.publisher ? emp.publisher.pubName : 'Data Missing'}</td>
-                    </tr>
-                </table>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center relative overflow-hidden">
+                            <div class="absolute top-0 left-0 right-0 h-24 hero-gradient"></div>
+                            
+                            <div class="relative w-24 h-24 mx-auto mt-8 mb-4 bg-white rounded-full p-1 shadow-md">
+                                <div class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center text-3xl text-indigo-400">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                            </div>
+
+                            <h2 class="text-2xl font-extrabold text-slate-900 line-clamp-2">${fullName}</h2>
+                            <p class="text-sm font-mono text-slate-500 mt-2">${empId}</p>
+
+                            <ul class="text-left space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6 mt-6">
+                                <li class="flex items-start">
+                                    <i class="fas fa-calendar-alt text-indigo-400 w-6 mt-1"></i> 
+                                    <div>
+                                        <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Hire Date</span>
+                                        <span class="block font-medium mt-1 text-slate-800">${new Date(emp.hireDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="grid grid-cols-2 gap-3 mt-8 pt-6 border-t border-slate-100">
+                                <button id="openEditBtn" class="bg-slate-100 text-slate-700 hover:bg-slate-200 py-2.5 rounded-xl font-bold transition shadow-sm w-full">
+                                    <i class="fas fa-edit mr-1"></i> Edit
+                                </button>
+                                <button id="openDeleteBtn" class="bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-xl font-bold transition shadow-sm w-full">
+                                    <i class="fas fa-trash-alt mr-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center">
+                                <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-briefcase text-indigo-500 mr-2"></i> Professional Details</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center flex-shrink-0"><i class="fas fa-star"></i></div>
+                                        <div class="ml-4">
+                                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Job Role</p>
+                                            <p class="font-bold text-slate-900 mt-1">${jobDesc}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center flex-shrink-0"><i class="fas fa-layer-group"></i></div>
+                                        <div class="ml-4">
+                                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Job Level</p>
+                                            <p class="font-bold text-slate-900 mt-1 font-mono">${emp.jobLvl}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center">
+                                <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-building text-indigo-500 mr-2"></i> Assigned Publisher</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center flex-shrink-0"><i class="fas fa-city"></i></div>
+                                    <div class="ml-4">
+                                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Publisher Name</p>
+                                        <p class="font-bold text-slate-900 mt-1">${pubName}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
-            // Only show the edit button if the data loaded successfully
-            document.getElementById('openEditBtn').style.display = 'inline-block';
+
+            document.getElementById('openEditBtn').addEventListener('click', () => {
+                openEditModal(empId);
+            });
+
+            // Pass the name to the Modal and Open it
+            document.getElementById('openDeleteBtn').addEventListener('click', () => {
+                document.getElementById('deleteEmpNameModal').innerText = fullName;
+                toggleModal('deleteConfirmModal');
+            });
         })
         .catch(err => {
             console.error(err);
-            container.innerHTML = `<p style='color: var(--danger-color); font-weight: bold;'>${err.message}</p>`;
-            document.getElementById('openEditBtn').style.display = 'none';
+            container.innerHTML = `
+                <div class="bg-red-50 border border-red-200 text-red-600 p-6 rounded-2xl text-center">
+                    <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
+                    <p class="font-bold">${err.message}</p>
+                    <button onclick="window.history.back()" class="mt-4 bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-50 transition">Go Back</button>
+                </div>`;
         });
 }
 
@@ -133,7 +208,6 @@ function openEditModal(id) {
             document.getElementById('editMinit').value = emp.minit || '';
             document.getElementById('editLname').value = emp.lname;
 
-            // HATEOAS Extraction: Since the projection hides raw IDs, we extract them from the hypermedia links!
             let actualJobId = "";
             if (emp._links && emp._links.job && emp._links.job.href) {
                 actualJobId = emp._links.job.href.split('{')[0].split('/').pop();
@@ -160,9 +234,7 @@ function openEditModal(id) {
         .catch(err => alert("Failed to fetch employee details."));
 }
 
-// ==========================================
 // HELPERS
-// ==========================================
 function populateDropdowns() {
     fetch('/ui-api/employees/reference/jobs')
         .then(res => res.json())
@@ -210,9 +282,9 @@ function validateJobLevel(jobId, inputElement, errorElement) {
         const min = jobDataMap[jobId].minLvl;
         const max = jobDataMap[jobId].maxLvl;
         if (enteredLvl < min || enteredLvl > max) {
-            inputElement.style.borderColor = 'red';
+            inputElement.style.borderColor = '#ef4444';
             errorElement.innerText = `Must be between ${min} and ${max}.`;
-            errorElement.style.display = 'inline';
+            errorElement.style.display = 'block';
             return false;
         }
     }
