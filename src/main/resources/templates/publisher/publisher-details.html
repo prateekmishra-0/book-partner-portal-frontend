@@ -97,7 +97,7 @@
                         <button type="button" onclick="toggleModal('editPublisherModal')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 py-2.5 rounded-xl font-bold transition shadow-sm">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </button>
-                        <button type="button" onclick="toggleModal('deleteConfirmModal')" class="bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-xl font-bold transition shadow-sm">
+                        <button type="button" title="Delete Publisher" onclick="toggleModal('deleteConfirmModal')" class="bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-xl font-bold transition shadow-sm inline-flex items-center justify-center">
                             <i class="fas fa-trash-alt mr-1"></i> Delete
                         </button>
                     </div>
@@ -188,17 +188,24 @@
     </div>
 
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center p-8">
-            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5 text-red-500 text-4xl shadow-inner">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl shadow-inner">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Deactivate Publisher?</h2>
-            <p class="text-slate-500 mb-8 text-sm leading-relaxed">
-                Are you sure you want to deactivate <strong class="text-slate-800" th:text="${publisher.pubName}"></strong>? This action will remove it from the active directory.
-            </p>
+            <h2 class="text-xl font-bold text-slate-900 mb-2">Delete Publisher?</h2>
+            <p class="text-slate-500 mb-4 text-sm">This action cannot be undone.</p>
+
+            <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left border border-slate-200">
+                <div class="font-bold text-slate-800 text-base mb-2 truncate" th:text="${publisher.pubName}"></div>
+                <div class="text-xs text-slate-500 flex justify-between items-center gap-2">
+                    <span class="bg-white px-2 py-1 rounded border border-slate-200 font-mono text-slate-600" th:text="${publisher.pubId}"></span>
+                    <span class="font-medium text-slate-600 truncate" th:text="${(publisher.city != null ? publisher.city : 'N/A') + ', ' + (publisher.state != null ? publisher.state : 'N/A') + ', ' + (publisher.country != null ? publisher.country : 'N/A')}"></span>
+                </div>
+            </div>
+
             <form th:action="@{/publishers/delete/{id}(id=${publisher.pubId})}" method="post" class="flex space-x-3">
-                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-                <button type="submit" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Deactivate</button>
+                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Delete</button>
             </form>
         </div>
     </div>
