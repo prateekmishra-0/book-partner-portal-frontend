@@ -177,19 +177,17 @@
                             <td class="p-4">
                                 <div class="text-sm font-medium text-slate-700 title-royalty" th:text="${title.royalty != null ? title.royalty + '%' : '0%'}"></div>
                             </td>
-                            <td class="p-4">
+                            <td class="p-4" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center space-x-2">
-                                    <a th:href="@{/titles/{id}(id=${title.titleId})}" 
-                                       onclick="event.stopPropagation();" 
-                                       class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm">
-                                       <i class="fas fa-eye mr-1"></i> View
-                                    </a>
                                     <button type="button" 
-                                            class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-4 rounded-lg text-sm transition shadow-sm"
+                                            title="Delete Title"
+                                            class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-1.5 px-3 rounded-lg text-sm transition shadow-sm inline-flex items-center justify-center"
                                             th:data-id="${title.titleId}"
                                             th:data-name="${title.title}"
+                                            th:data-type="${title.type}"
+                                            th:data-price="${title.price != null ? '$' + #numbers.formatDecimal(title.price, 1, 2) : 'N/A'}"
                                             onclick="prepareDelete(this, event)">
-                                        <i class="fas fa-trash-alt mr-1"></i> Delete
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
                             </td>
@@ -282,17 +280,22 @@
     </div>
 
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center p-8">
-            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5 text-red-500 text-4xl shadow-inner">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl shadow-inner">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Delete Title?</h2>
-            <p class="text-slate-500 mb-8 text-sm leading-relaxed">
-                Are you sure you want to delete <strong class="text-slate-800" id="deleteTitleNameModal"></strong>? This action cannot be undone.
-            </p>
+            <h2 class="text-xl font-bold text-slate-900 mb-2">Delete Title?</h2>
+            <p class="text-slate-500 mb-4 text-sm">This action cannot be undone.</p>
+            <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left border border-slate-200">
+                <div class="font-bold text-slate-800 text-base mb-2 truncate" id="deleteTitleNameModal"></div>
+                <div class="text-xs text-slate-500 flex justify-between items-center gap-2">
+                    <span class="bg-white px-2 py-1 rounded border border-slate-200 font-mono text-slate-600" id="deleteTitleIdModal"></span>
+                    <span class="font-medium text-slate-600 truncate" id="deleteTitleMetaModal"></span>
+                </div>
+            </div>
             <form id="deleteForm" method="post" class="flex space-x-3">
-                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-                <button type="submit" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Delete</button>
+                <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Delete</button>
             </form>
         </div>
     </div>
@@ -307,7 +310,11 @@
             event.stopPropagation();
             const titleId = button.getAttribute('data-id');
             const titleName = button.getAttribute('data-name');
+            const type = button.getAttribute('data-type') || 'N/A';
+            const price = button.getAttribute('data-price') || 'N/A';
             document.getElementById('deleteTitleNameModal').textContent = titleName;
+            document.getElementById('deleteTitleIdModal').textContent = titleId;
+            document.getElementById('deleteTitleMetaModal').textContent = `${type} | ${price}`;
             document.getElementById('deleteForm').action = `/titles/delete/${titleId}`;
             toggleModal('deleteConfirmModal');
         }
