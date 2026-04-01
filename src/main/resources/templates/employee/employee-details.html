@@ -3,17 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>Employee Profile</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<h2>Employee Profile</h2>
+<div class="app-container" style="max-width: 800px;">
+    <h2>Employee Profile</h2>
 
-<div id="detailsContainer">
-    <p>Loading employee data...</p>
+    <div id="detailsContainer">
+        <p>Loading employee data...</p>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-top: 25px;">
+        <button onclick="window.history.back()" style="background-color: #6c757d;">&larr; Back to Directory</button>
+        <button id="openEditBtn" style="display: none;">Edit Employee Details</button>
+    </div>
 </div>
 
-<br>
-<button onclick="window.history.back()">Back to Directory</button>
+<dialog id="editEmployeeModal">
+    <h3>Edit Employee</h3>
+    <form id="editEmployeeForm">
+        <div>
+            <label for="editEmpId">Employee ID (Locked):</label>
+            <input type="text" id="editEmpId" readonly style="background-color: #e9ecef; border: 1px solid #ccc; color: #666; cursor: not-allowed; width: 150px;">
+        </div>
+        <div>
+            <label for="editFname">First Name:*</label>
+            <input type="text" id="editFname" required maxlength="20">
+        </div>
+        <div>
+            <label for="editMinit">Middle Initial (optional):</label>
+            <input type="text" id="editMinit" maxlength="1">
+        </div>
+        <div>
+            <label for="editLname">Last Name:*</label>
+            <input type="text" id="editLname" required maxlength="30">
+        </div>
+        <div>
+            <label for="editJobSelect">Job Role:*</label>
+            <select id="editJobSelect" required>
+                <option value="">Select a Job</option>
+            </select>
+        </div>
+        <div>
+            <label for="editJobLvl">Job Level:*</label>
+            <input type="number" id="editJobLvl" required>
+            <span id="editJobLvlError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid level.</span>
+            <div id="editJobLvlHelp" style="font-size: 0.85em; color: #555; margin-top: 5px;">Select a job role to see allowed levels.</div>
+        </div>
+        <div>
+            <label for="editPubSelect">Publisher:*</label>
+            <select id="editPubSelect" required>
+                <option value="">Select a Publisher</option>
+            </select>
+        </div>
+        <div style="margin-top: 20px;">
+            <button type="submit">Update Details</button>
+            <button type="button" id="closeEditModalBtn" style="background-color: #6c757d;">Cancel</button>
+        </div>
+        <div id="editFormErrorMsg" style="color: var(--danger-color); display: none; margin-top: 10px;">Please fix highlighted errors.</div>
+    </form>
+</dialog>
 
 <script src="/js/employee/employee-details.js"></script>
 </body>

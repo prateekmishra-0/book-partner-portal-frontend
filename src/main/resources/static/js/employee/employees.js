@@ -8,7 +8,7 @@ let jobDataMap = {};
 const empIdRegex = /^([A-Z]{3}[1-9][0-9]{4}[FM]|[A-Z]-[A-Z][1-9][0-9]{4}[FM])$/;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // PRE-LOAD DROPDOWNS: Fetch jobs and publishers immediately so they are ready for both Add and Edit modals
+    // PRE-LOAD DROPDOWNS: Fetch jobs and publishers immediately so they are ready for the Add modal
     populateDropdowns();
     fetchEmployees(currentUrl);
 
@@ -110,60 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('formErrorMsg').style.display = 'block';
         });
     });
-
-    // ==========================================
-    // EDIT Employee Logic
-    // ==========================================
-    const editModal = document.getElementById('editEmployeeModal');
-    const editForm = document.getElementById('editEmployeeForm');
-
-    document.getElementById('closeEditModalBtn').addEventListener('click', () => editModal.close());
-
-    // Edit Form - Dynamic Job Level Help
-    document.getElementById('editJobSelect').addEventListener('change', (e) => {
-        updateJobLevelHelp(e.target.value, document.getElementById('editJobLvl'), document.getElementById('editJobLvlHelp'));
-    });
-
-    editForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        if (!validateJobLevel(document.getElementById('editJobSelect').value, document.getElementById('editJobLvl'), document.getElementById('editJobLvlError'))) return;
-
-        const empId = document.getElementById('editEmpId').value;
-        const updates = {
-            fname: document.getElementById('editFname').value.trim(),
-            minit: document.getElementById('editMinit').value.trim() || null,
-            lname: document.getElementById('editLname').value.trim(),
-            jobId: parseInt(document.getElementById('editJobSelect').value, 10),
-            jobLvl: parseInt(document.getElementById('editJobLvl').value, 10),
-            pubId: document.getElementById('editPubSelect').value
-        };
-
-        // Send a PATCH request to update only the modified fields
-        fetch(`/ui-api/employees/${empId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
-        }).then(async response => {
-            if (response.ok || response.status === 200) {
-                editModal.close();
-                fetchEmployees(currentUrl);
-            } else {
-                // Read and display the exact error text for edits too
-                const errorText = await response.text();
-                document.getElementById('editFormErrorMsg').innerHTML = `<strong>Server Error ${response.status}:</strong> ${errorText}`;
-                document.getElementById('editFormErrorMsg').style.display = 'block';
-            }
-        }).catch(error => {
-            console.error("Network error:", error);
-            document.getElementById('editFormErrorMsg').innerText = "Network error occurred.";
-            document.getElementById('editFormErrorMsg').style.display = 'block';
-        });
-    });
 });
 
 // ==========================================
-// Shared Helpers for Add & Edit Modals
+// Shared Helpers for Add Modal
 // ==========================================
 function updateJobLevelHelp(jobId, inputElement, helpTextElement) {
     if (jobId && jobDataMap[jobId]) {
@@ -196,18 +146,16 @@ function validateJobLevel(jobId, inputElement, errorElement) {
     return true;
 }
 
-// Fetch Reference Data and populate BOTH Add and Edit Dropdowns
+// Fetch Reference Data and populate Add Dropdowns
 function populateDropdowns() {
     fetch('/ui-api/employees/reference/jobs')
         .then(res => res.json())
         .then(data => {
             const addJob = document.getElementById('newJobSelect');
-            const editJob = document.getElementById('editJobSelect');
             if (data._embedded && data._embedded.jobs) {
                 data._embedded.jobs.forEach(job => {
                     const jobId = job._links.self.href.split('/').pop();
                     addJob.add(new Option(job.jobDesc, jobId));
-                    editJob.add(new Option(job.jobDesc, jobId));
                     jobDataMap[jobId] = { minLvl: job.minLvl, maxLvl: job.maxLvl };
                 });
             }
@@ -217,52 +165,18 @@ function populateDropdowns() {
         .then(res => res.json())
         .then(data => {
             const addPub = document.getElementById('newPubSelect');
-            const editPub = document.getElementById('editPubSelect');
             if (data._embedded && data._embedded.publishers) {
                 data._embedded.publishers.forEach(pub => {
                     const pubId = pub._links.self.href.split('/').pop();
                     addPub.add(new Option(pub.pubName, pubId));
-                    editPub.add(new Option(pub.pubName, pubId));
                 });
             }
         });
 }
 
 // ==========================================
-// ACTION BUTTONS (Edit, View, Delete)
+// ACTION BUTTONS (View, Delete)
 // ==========================================
-window.editEmployee = function(url) {
-    const cleanUrl = url.split('{')[0];
-    const id = cleanUrl.split('/').pop();
-
-    // Fetch the specific employee's current details
-    fetch(`/ui-api/employees/${id}`)
-        .then(response => response.json())
-        .then(emp => {
-            // Fill the Edit Form
-            document.getElementById('editEmpId').value = id;
-            document.getElementById('editFname').value = emp.fname;
-            document.getElementById('editMinit').value = emp.minit || '';
-            document.getElementById('editLname').value = emp.lname;
-
-            // Set Dropdowns and trigger change events to update Job Level validations
-            const jobSelect = document.getElementById('editJobSelect');
-            jobSelect.value = emp.jobId;
-            jobSelect.dispatchEvent(new Event('change'));
-
-            document.getElementById('editJobLvl').value = emp.jobLvl;
-            document.getElementById('editPubSelect').value = emp.pubId;
-
-            document.getElementById('editJobLvlError').style.display = 'none';
-            document.getElementById('editFormErrorMsg').style.display = 'none';
-            document.getElementById('editJobLvl').style.borderColor = '';
-
-            // Open Modal
-            document.getElementById('editEmployeeModal').showModal();
-        })
-        .catch(err => alert("Failed to fetch employee details."));
-};
-
 window.viewDetails = function(url) {
     const cleanUrl = url.split('{')[0];
     const id = cleanUrl.split('/').pop();
@@ -334,9 +248,8 @@ function renderTable(employees) {
             <td>${emp.lname}</td>
             <td>${emp.jobLvl}</td>
             <td>
-                <button onclick="editEmployee('${emp._links.self.href}')">Edit</button>
                 <button onclick="viewDetails('${emp._links.self.href}')">View</button>
-                <button onclick="deleteEmployee('${emp._links.self.href}')">Delete</button>
+                <button onclick="deleteEmployee('${emp._links.self.href}')" style="background-color: var(--danger-color);">Delete</button>
             </td>
         </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);

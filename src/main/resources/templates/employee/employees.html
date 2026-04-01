@@ -3,147 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <title>Employee Master List</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<h2>Employee Directory</h2>
+<div class="app-container">
+    <h2>Employee Directory</h2>
 
-<div style="margin-bottom: 15px;">
-    <button id="addEmployeeBtn">Add New Employee</button>
-</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <button id="addEmployeeBtn">Add New Employee</button>
 
-<div>
-    <label for="sizeSelect">Rows per page: </label>
-    <select id="sizeSelect">
-        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-        <option value="10" selected>10</option>
-    </select>
-</div>
-<br>
+        <div>
+            <label for="sizeSelect" style="font-weight: 600;">Rows per page: </label>
+            <select id="sizeSelect" style="width: auto; display: inline-block;">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                <option value="10" selected>10</option>
+            </select>
+        </div>
+    </div>
 
-<table border="1" width="100%">
-    <thead>
-    <tr>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Job Level</th>
-        <th>Actions</th>
-    </tr>
-    <tr>
-        <th><input type="text" id="searchFname" placeholder="Search First Name..."></th>
-        <th><input type="text" id="searchLname" placeholder="Search Last Name..."></th>
-        <th><input type="number" id="searchJobLvl" placeholder="Search Job Lvl..."></th>
-        <th><button id="clearBtn">Clear Filters</button></th>
-    </tr>
-    </thead>
-    <tbody id="employeeTableBody">
-    </tbody>
-</table>
+    <table width="100%">
+        <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Job Level</th>
+            <th>Actions</th>
+        </tr>
+        <tr>
+            <th><input type="text" id="searchFname" placeholder="Search First Name..."></th>
+            <th><input type="text" id="searchLname" placeholder="Search Last Name..."></th>
+            <th><input type="number" id="searchJobLvl" placeholder="Search Job Lvl..."></th>
+            <th><button id="clearBtn">Clear Filters</button></th>
+        </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+        </tbody>
+    </table>
 
-<br>
-
-<div>
-    <button id="prevBtn" disabled>Previous Page</button>
-    <span id="pageInfo">Loading...</span>
-    <button id="nextBtn" disabled>Next Page</button>
+    <div class="pagination-bar">
+        <button id="prevBtn" disabled>Previous Page</button>
+        <span id="pageInfo">Loading...</span>
+        <button id="nextBtn" disabled>Next Page</button>
+    </div>
 </div>
 
 <dialog id="addEmployeeModal">
     <h3>Add New Employee</h3>
     <form id="addEmployeeForm">
-        <div style="margin-bottom: 15px;">
+        <div>
             <label for="newEmpId">Employee ID:*</label>
             <input type="text" id="newEmpId" required placeholder="e.g. ABC12345M">
-            <span id="empIdError" style="color: red; display: none; margin-left: 10px;">Invalid format.</span>
-            <div style="font-size: 0.85em; color: #555; margin-top: 5px; background: #f9f9f9; padding: 5px; border: 1px solid #ddd;">
+            <span id="empIdError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid format.</span>
+
+            <div style="font-size: 0.85em; color: #555; margin-top: 8px; background: var(--bg-light); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
                 <strong>Required Format (9 characters):</strong><br>
                 • <strong>Prefix:</strong> 3 Uppercase Letters (or Letter-Hyphen-Letter).<br>
                 • <strong>Middle:</strong> 5 Digits (first digit cannot be 0).<br>
                 • <strong>Suffix:</strong> Ends with 'F' or 'M'.
             </div>
         </div>
+
         <div>
             <label for="newFname">First Name:*</label>
             <input type="text" id="newFname" required maxlength="20">
-        </div><br>
+        </div>
         <div>
             <label for="newMinit">Middle Initial (optional):</label>
             <input type="text" id="newMinit" maxlength="1">
-        </div><br>
+        </div>
         <div>
             <label for="newLname">Last Name:*</label>
             <input type="text" id="newLname" required maxlength="30">
-        </div><br>
+        </div>
         <div>
             <label for="newJobSelect">Job Role:*</label>
             <select id="newJobSelect" required>
                 <option value="">Select a Job</option>
             </select>
-        </div><br>
+        </div>
         <div>
             <label for="newJobLvl">Job Level:*</label>
             <input type="number" id="newJobLvl" required>
-            <span id="jobLvlError" style="color: red; display: none; margin-left: 10px;">Invalid level.</span>
-            <div id="jobLvlHelp" style="font-size: 0.85em; color: #555; margin-top: 5px;">Select a job role to see allowed levels.</div>
-        </div><br>
+            <span id="jobLvlError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid level.</span>
+            <div id="jobLvlHelp">Select a job role to see allowed levels.</div>
+        </div>
         <div>
             <label for="newPubSelect">Publisher:*</label>
             <select id="newPubSelect" required>
                 <option value="">Select a Publisher</option>
             </select>
-        </div><br>
+        </div>
         <div style="margin-top: 15px;">
-            <button type="submit">Save</button>
-            <button type="button" id="closeAddModalBtn">Cancel</button>
+            <button type="submit">Save Employee</button>
+            <button type="button" id="closeAddModalBtn" style="background-color: #6c757d;">Cancel</button>
         </div>
-        <div id="formErrorMsg" style="color: red; display: none; margin-top: 10px;">Please fix highlighted errors.</div>
-    </form>
-</dialog>
-
-<dialog id="editEmployeeModal">
-    <h3>Edit Employee</h3>
-    <form id="editEmployeeForm">
-        <div style="margin-bottom: 15px;">
-            <label for="editEmpId">Employee ID (Cannot be changed):</label>
-            <input type="text" id="editEmpId" readonly style="background-color: #e9ecef; border: 1px solid #ccc; color: #666; cursor: not-allowed; width: 150px;">
-        </div>
-        <div>
-            <label for="editFname">First Name:*</label>
-            <input type="text" id="editFname" required maxlength="20">
-        </div><br>
-        <div>
-            <label for="editMinit">Middle Initial (optional):</label>
-            <input type="text" id="editMinit" maxlength="1">
-        </div><br>
-        <div>
-            <label for="editLname">Last Name:*</label>
-            <input type="text" id="editLname" required maxlength="30">
-        </div><br>
-        <div>
-            <label for="editJobSelect">Job Role:*</label>
-            <select id="editJobSelect" required>
-                <option value="">Select a Job</option>
-            </select>
-        </div><br>
-        <div>
-            <label for="editJobLvl">Job Level:*</label>
-            <input type="number" id="editJobLvl" required>
-            <span id="editJobLvlError" style="color: red; display: none; margin-left: 10px;">Invalid level.</span>
-            <div id="editJobLvlHelp" style="font-size: 0.85em; color: #555; margin-top: 5px;">Select a job role to see allowed levels.</div>
-        </div><br>
-        <div>
-            <label for="editPubSelect">Publisher:*</label>
-            <select id="editPubSelect" required>
-                <option value="">Select a Publisher</option>
-            </select>
-        </div><br>
-        <div style="margin-top: 15px;">
-            <button type="submit">Update Details</button>
-            <button type="button" id="closeEditModalBtn">Cancel</button>
-        </div>
-        <div id="editFormErrorMsg" style="color: red; display: none; margin-top: 10px;">Please fix highlighted errors.</div>
+        <div id="formErrorMsg" style="color: var(--danger-color); display: none; margin-top: 10px;">Please fill all required fields correctly.</div>
     </form>
 </dialog>
 
