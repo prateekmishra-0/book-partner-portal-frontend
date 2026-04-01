@@ -274,23 +274,23 @@
                         <table id="salesTable" class="table table-hover table-custom align-middle w-100 mb-0">
                             <thead>
                             <tr>
-                                <th>ORDER NUMBER</th>
-                                <th>ORDER DATE</th>
+                                <th class="text-nowrap">ORDER NUMBER</th>
+                                <th class="text-nowrap">ORDER DATE</th>
                                 <th>BOOK TITLE</th>
-                                <th>QTY</th>
-                                <th>UNIT PRICE</th>
-                                <th>TOTAL AMOUNT</th>
+                                <th class="text-nowrap">QTY</th>
+                                <th class="text-nowrap">UNIT PRICE</th>
+                                <th class="text-nowrap">TOTAL AMOUNT</th>
                                 <th class="text-center">ACTIONS</th>
                             </tr>
                             </thead>
                             <tbody style="border-top: none;">
                             <tr th:each="sale : ${salesList}">
-                                <td class="fw-bold" style="color: #1e293b; font-size: 0.95rem;" th:text="${sale.ordNum}"></td>
-                                <td class="fw-medium" style="color: #475569; font-size: 0.95rem;" th:text="${sale.ordDate != null ? #strings.substringBefore(sale.ordDate, 'T') : ''}"></td>
+                                <td class="fw-bold text-nowrap" style="color: #1e293b; font-size: 0.95rem;" th:text="${sale.ordNum}"></td>
+                                <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.ordDate != null ? #strings.substringBefore(sale.ordDate, 'T') : ''}"></td>
                                 <td class="fw-medium text-wrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.title.title}"></td>
-                                <td class="fw-medium" style="color: #475569; font-size: 0.95rem;" th:text="${sale.qty}"></td>
-                                <td class="fw-medium" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.title.price, 1, 2)}"></td>
-                                <td class="fw-bold" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.totalAmount, 1, 2)}"></td>
+                                <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.qty}"></td>
+                                <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.title.price, 1, 2)}"></td>
+                                <td class="fw-bold text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.totalAmount, 1, 2)}"></td>
                                 <td class="text-center">
                                     <button class="btn-action-edit border-0"
                                             data-bs-toggle="modal"
@@ -309,9 +309,9 @@
                             <tfoot style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #e2e8f0;" th:if="${salesList != null and !salesList.isEmpty()}">
                             <tr>
                                 <td colspan="3" class="text-end text-indigo p-3" style="font-size: 0.95rem;">Partner Totals:</td>
-                                <td class="p-3 text-dark" style="font-size: 0.95rem;" th:text="${#aggregates.sum(salesList.![qty])}">0</td>
+                                <td class="p-3 text-dark text-nowrap" style="font-size: 0.95rem;" th:text="${#aggregates.sum(salesList.![qty])}">0</td>
                                 <td class="p-3"></td>
-                                <td class="p-3 fw-bold" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(#aggregates.sum(salesList.![totalAmount]), 1, 2)}">$0.00</td>
+                                <td class="p-3 fw-bold text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(#aggregates.sum(salesList.![totalAmount]), 1, 2)}">$0.00</td>
                                 <td class="p-3"></td>
                             </tr>
                             </tfoot>
@@ -322,16 +322,6 @@
         </div>
     </div>
 </div>
-
-<footer class="bg-slate-900 text-slate-400 py-4 px-4 mt-auto">
-    <div class="container-fluid d-flex flex-column flex-md-row justify-content-between align-items-center" style="max-width: 90rem; margin: 0 auto;">
-        <p class="mb-0 small">&copy; 2026 Capgemini Pubs Project. All rights reserved.</p>
-        <div class="d-flex gap-4 mt-3 mt-md-0 small">
-            <a href="#" class="text-slate-400 text-slate-400-hover text-decoration-none transition"><i class="fab fa-github"></i> Source</a>
-            <a href="#" class="text-slate-400 text-slate-400-hover text-decoration-none transition"><i class="fas fa-file-code"></i> Documentation</a>
-        </div>
-    </div>
-</footer>
 
 <div class="modal fade" id="addSaleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
