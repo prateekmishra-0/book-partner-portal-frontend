@@ -2,6 +2,8 @@ package com.capgemini.book_partner_frontend.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capgemini.book_partner_frontend.DTO.author.AuthorDto;
@@ -29,16 +32,21 @@ public class AuthorFrontendController {
 
     // --- Add Author Success/Error ---
     @PostMapping("/add")
-    public String addAuthor(@ModelAttribute("newAuthor") AuthorDto newAuthor, RedirectAttributes redirectAttributes) {
+    public ResponseEntity<String> addAuthor(@ModelAttribute("newAuthor") AuthorDto newAuthor, RedirectAttributes redirectAttributes) {
         try {
             authorClientService.createAuthor(newAuthor);
+            
+            // We still keep this for standard non-JS fallbacks
             redirectAttributes.addFlashAttribute("message", "New author registered successfully!");
             redirectAttributes.addFlashAttribute("messageType", "success");
+            
+            return ResponseEntity.ok("Success");
+        } catch (HttpClientErrorException.Conflict e) {
+
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Could not register author. Check ID format.");
-            redirectAttributes.addFlashAttribute("messageType", "error");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        return "redirect:/authors";
     }
 
     // --- Edit Author Success/Error ---
@@ -78,37 +86,36 @@ public String deleteAuthor(@PathVariable("id") String id, RedirectAttributes red
         
         model.addAttribute("author", author);
         model.addAttribute("titleList", titles);
-        return "author-details"; 
+        return "authors/author-details"; 
     }
 
 
 
-    // --- REVERTED TO DROPDOWN SEARCH METHOD ---
-    @GetMapping
-    public String viewAuthorsPage(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(required = false) String searchBy,
-            @RequestParam(required = false) String keyword,
-            Model model) {
+@GetMapping
+public String viewAuthorsPage(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "5") int size,
+        @RequestParam(required = false) String searchBy,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "firstName") String sort,      
+        @RequestParam(defaultValue = "asc") String dir,            
+        Model model) {
 
-        // Fetch using the old searchBy/keyword logic
-        PagedResult<AuthorDto> result = authorClientService.fetchAuthorsPaginated(page, size, searchBy, keyword);
+    // Pass sort and dir to your service
+    PagedResult<AuthorDto> result = authorClientService.fetchAuthorsPaginated(page, size, searchBy, keyword, sort, dir);
 
-        // Add the data to the model
-        model.addAttribute("authorList", result.content());
-        model.addAttribute("pageMeta", result.metadata());
-        
-        // Return these to the model so the UI preserves the search state
-        model.addAttribute("currentSize", size);
-        model.addAttribute("searchBy", searchBy);
-        model.addAttribute("keyword", keyword);
-        
-        // Empty DTO for the Add Modal
-        model.addAttribute("newAuthor", new AuthorDto());
-        
-        return "authors-page"; 
-    }
+    model.addAttribute("authorList", result.content());
+    model.addAttribute("pageMeta", result.metadata());
+    model.addAttribute("currentSize", size);
+    model.addAttribute("searchBy", searchBy);
+    model.addAttribute("keyword", keyword);
+    model.addAttribute("sort", sort);
+    model.addAttribute("dir", dir);
+    model.addAttribute("reverseDir", dir.equals("asc") ? "desc" : "asc"); // For toggling
+    model.addAttribute("newAuthor", new AuthorDto());
+    
+    return "authors/authors-page"; 
+}
 
     
 }

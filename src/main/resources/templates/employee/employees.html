@@ -3,48 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <title>Employee Master List</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<h2>Employee Directory</h2>
+<div class="app-container">
+    <h2>Employee Directory</h2>
 
-<div>
-    <label for="sizeSelect">Rows per page: </label>
-    <select id="sizeSelect">
-        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-        <option value="10" selected>10</option>
-    </select>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <button id="addEmployeeBtn">Add New Employee</button>
+
+        <div>
+            <label for="sizeSelect" style="font-weight: 600;">Rows per page: </label>
+            <select id="sizeSelect" style="width: auto; display: inline-block;">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                <option value="10" selected>10</option>
+            </select>
+        </div>
+    </div>
+
+    <table width="100%">
+        <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Job Level</th>
+            <th>Actions</th>
+        </tr>
+        <tr>
+            <th><input type="text" id="searchFname" placeholder="Search First Name..."></th>
+            <th><input type="text" id="searchLname" placeholder="Search Last Name..."></th>
+            <th><input type="number" id="searchJobLvl" placeholder="Search Job Lvl..."></th>
+            <th><button id="clearBtn">Clear Filters</button></th>
+        </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination-bar">
+        <button id="prevBtn" disabled>Previous Page</button>
+        <span id="pageInfo">Loading...</span>
+        <button id="nextBtn" disabled>Next Page</button>
+    </div>
 </div>
-<br>
 
-<table border="1" width="100%">
-    <thead>
-    <tr>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Job Level</th>
-        <th>Actions</th>
-    </tr>
-    <tr>
-        <th><input type="text" id="searchFname" placeholder="Search First Name..."></th>
-        <th><input type="text" id="searchLname" placeholder="Search Last Name..."></th>
-        <th><input type="number" id="searchJobLvl" placeholder="Search Job Lvl..."></th>
-        <th><button id="clearBtn">Clear Filters</button></th>
-    </tr>
-    </thead>
-    <tbody id="employeeTableBody">
-    </tbody>
-</table>
+<dialog id="addEmployeeModal">
+    <h3>Add New Employee</h3>
+    <form id="addEmployeeForm">
+        <div>
+            <label for="newEmpId">Employee ID:*</label>
+            <input type="text" id="newEmpId" required placeholder="e.g. ABC12345M">
+            <span id="empIdError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid format.</span>
 
-<br>
+            <div style="font-size: 0.85em; color: #555; margin-top: 8px; background: var(--bg-light); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+                <strong>Required Format (9 characters):</strong><br>
+                • <strong>Prefix:</strong> 3 Uppercase Letters (or Letter-Hyphen-Letter).<br>
+                • <strong>Middle:</strong> 5 Digits (first digit cannot be 0).<br>
+                • <strong>Suffix:</strong> Ends with 'F' or 'M'.
+            </div>
+        </div>
 
-<div>
-    <button id="prevBtn" disabled>Previous Page</button>
-    <span id="pageInfo">Loading...</span>
-    <button id="nextBtn" disabled>Next Page</button>
-</div>
+        <div>
+            <label for="newFname">First Name:*</label>
+            <input type="text" id="newFname" required maxlength="20">
+        </div>
+        <div>
+            <label for="newMinit">Middle Initial (optional):</label>
+            <input type="text" id="newMinit" maxlength="1">
+        </div>
+        <div>
+            <label for="newLname">Last Name:*</label>
+            <input type="text" id="newLname" required maxlength="30">
+        </div>
+        <div>
+            <label for="newJobSelect">Job Role:*</label>
+            <select id="newJobSelect" required>
+                <option value="">Select a Job</option>
+            </select>
+        </div>
+        <div>
+            <label for="newJobLvl">Job Level:*</label>
+            <input type="number" id="newJobLvl" required>
+            <span id="jobLvlError" style="color: var(--danger-color); display: none; margin-top: 5px;">Invalid level.</span>
+            <div id="jobLvlHelp">Select a job role to see allowed levels.</div>
+        </div>
+        <div>
+            <label for="newPubSelect">Publisher:*</label>
+            <select id="newPubSelect" required>
+                <option value="">Select a Publisher</option>
+            </select>
+        </div>
+        <div style="margin-top: 15px;">
+            <button type="submit">Save Employee</button>
+            <button type="button" id="closeAddModalBtn" style="background-color: #6c757d;">Cancel</button>
+        </div>
+        <div id="formErrorMsg" style="color: var(--danger-color); display: none; margin-top: 10px;">Please fill all required fields correctly.</div>
+    </form>
+</dialog>
 
 <script src="/js/employee/employees.js"></script>
 </body>
