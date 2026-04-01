@@ -343,53 +343,7 @@
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        $('#storeTable').DataTable({
-            "pageLength": 10,
-            "ordering": true,
-            "info": true,
-            "lengthChange": true,
-            "searching": true,
-            "columnDefs": [
-                { "width": "45%", "targets": 0 },
-                { "width": "25%", "targets": 1 },
-                { "width": "15%", "targets": 2 },
-                { "orderable": false, "targets": 3, "width": "15%" }
-            ],
-            "language": {
-                "search": "Search Anything:",
-                "paginate": {
-                    "previous": "<i class='fas fa-chevron-left me-1'></i> Prev",
-                    "next": "Next <i class='fas fa-chevron-right ms-1'></i>"
-                }
-            }
-        });
-
-        if ($('#addStoreModal .is-invalid').length > 0) {
-            var addModal = new bootstrap.Modal(document.getElementById('addStoreModal'));
-            addModal.show();
-        }
-
-        $('#addStoreModal .is-invalid').on('input', function() {
-            $(this).removeClass('is-invalid');
-        });
-
-        $('#addStoreModal').on('hidden.bs.modal', function () {
-            $(this).find('form')[0].reset();
-            $(this).find('.is-invalid').removeClass('is-invalid');
-        });
-    });
-
-    function prepareDeleteModal(button) {
-        const storeId = button.getAttribute('data-id');
-        const storeName = button.getAttribute('data-name');
-        document.getElementById('deleteStoreName').innerText = storeName;
-        document.getElementById('confirmDeleteBtn').href = '/stores/delete/' + storeId;
-        var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-        deleteModal.show();
-    }
-</script>
+<script src="/js/store/store.js"></script>
 
 </body>
 </html>

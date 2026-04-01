@@ -48,14 +48,17 @@ public class StoreController {
             response = restClient.get().uri("/api/stores").retrieve().body(StoreResponse.class);
         }
 
-        // Initialize an empty form object unless one was passed via redirect attributes (on error)
         if (response != null && response.get_embedded() != null) {
             model.addAttribute("storesList", response.get_embedded().getStores());
         }
 
         model.addAttribute("searchType", searchType);
         model.addAttribute("searchKeyword", searchKeyword);
-        model.addAttribute("newStore", new Store());
+
+        // Initialize an empty form object unless one was passed via redirect attributes (on error)
+        if (!model.containsAttribute("newStore")) {
+            model.addAttribute("newStore", new Store());
+        }
 
         return "stores/stores_list";
     }
@@ -64,14 +67,12 @@ public class StoreController {
     public String addStore(@ModelAttribute Store newStore, RedirectAttributes redirectAttributes) {
 
         // 1. SANITIZE THE DATA: Convert empty strings to actual nulls
-        // This prevents the backend's strict Regex validations from panicking over empty boxes
         if (newStore.getZip() != null && newStore.getZip().trim().isEmpty()) {
             newStore.setZip(null);
         }
         if (newStore.getState() != null && newStore.getState().trim().isEmpty()) {
             newStore.setState(null);
         }
-
         if (newStore.getState() != null) {
             newStore.setState(newStore.getState().toUpperCase());
         }
@@ -108,6 +109,7 @@ public class StoreController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete store.");
         }
+        // Note: It is correct to redirect back to /stores after a delete because the Sales Ledger you were just looking at no longer exists!
         return "redirect:/stores";
     }
 
@@ -115,18 +117,15 @@ public class StoreController {
     public String editStore(@ModelAttribute Store updatedStore, RedirectAttributes redirectAttributes) {
 
         // 1. SANITIZE THE DATA: Convert empty strings to actual nulls
-        // This stops the backend Regex from panicking when a user clears a field
         if (updatedStore.getZip() != null && updatedStore.getZip().trim().isEmpty()) {
             updatedStore.setZip(null);
         }
         if (updatedStore.getState() != null && updatedStore.getState().trim().isEmpty()) {
             updatedStore.setState(null);
         }
-
         if (updatedStore.getState() != null) {
             updatedStore.setState(updatedStore.getState().toUpperCase());
         }
-
 
         try {
             restClient.patch()
@@ -138,13 +137,12 @@ public class StoreController {
             redirectAttributes.addFlashAttribute("successMessage", "Store updated successfully!");
 
         } catch (org.springframework.web.client.HttpClientErrorException.BadRequest e) {
-            // 2. Catch 400 Bad Request (Validation Errors from the backend)
             redirectAttributes.addFlashAttribute("errorMessage", "Update Failed: Please check your formatting (e.g., Zip must be 5 digits).");
         } catch (Exception e) {
-            // 3. Catch generic 500 Errors
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to update store.");
         }
 
-        return "redirect:/stores";
+        // FIX: Redirect back to the specific Store's Sales Ledger instead of the main directory!
+        return "redirect:/stores/" + updatedStore.getStorId() + "/sales";
     }
 }
