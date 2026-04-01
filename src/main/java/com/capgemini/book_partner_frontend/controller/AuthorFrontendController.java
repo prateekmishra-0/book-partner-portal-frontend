@@ -42,9 +42,10 @@ public class AuthorFrontendController {
             
             return ResponseEntity.ok("Success");
         } catch (HttpClientErrorException.Conflict e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Duplicate ID");
+
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Validation Error");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

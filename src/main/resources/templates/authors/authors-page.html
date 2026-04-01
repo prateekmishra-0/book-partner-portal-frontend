@@ -288,15 +288,27 @@
                 });
 
                 if (response.ok) {
-                    // APPEND A PARAMETER SO WE KNOW IT WAS SUCCESSFUL AFTER RELOAD
+                    // Success: reload to show list and trigger success toast
                     window.location.href = "/authors?added=true"; 
                 } else {
-                    let msg = "Failed to save author.";
-                    if (response.status === 409) msg = "Conflict: Author ID already exists.";
-                    if (response.status === 400) msg = "Error: Please check your data format.";
+                    // Get the actual text message from the backend body
+                    const errorText = await response.text();
+                    
+                    let msg = errorText || "Failed to save author.";
+                    
+                    // Clean up the message if it looks like a JSON error object
+                    if (msg.includes('{"')) {
+                        try {
+                            const errObj = JSON.parse(msg);
+                            msg = errObj.message || msg;
+                        } catch(e) {}
+                    }
+
                     showErrorToast(msg);
                 }
-            } catch (err) { showErrorToast("Network error. Try again."); }
+            } catch (err) { 
+                showErrorToast("Network error. Try again."); 
+            }
         }
 
         // 4. Prepare Delete
