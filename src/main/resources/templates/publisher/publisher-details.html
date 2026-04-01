@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Author Profile | PubsPortal</title>
+    <title>Publisher Profile | PubsPortal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -43,7 +43,6 @@
     </nav>
 
     <main class="py-10 px-6 max-w-7xl mx-auto">
-        
         <nav class="mb-8" aria-label="Breadcrumb">
             <ol class="flex items-center space-x-2 text-sm font-medium text-slate-500 overflow-x-auto pb-2 sm:pb-0">
                 <li>
@@ -55,13 +54,13 @@
                     <i class="fas fa-chevron-right text-[10px] text-slate-400 mt-0.5"></i>
                 </li>
                 <li>
-                    <a href="/authors" class="hover:text-indigo-600 transition whitespace-nowrap">Authors Directory</a>
+                    <a href="/publishers" class="hover:text-indigo-600 transition whitespace-nowrap">Publishers Directory</a>
                 </li>
                 <li>
                     <i class="fas fa-chevron-right text-[10px] text-slate-400 mt-0.5"></i>
                 </li>
-                <li class="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-none" aria-current="page" th:text="${author.firstName + ' ' + author.lastName}">
-                    Author Profile
+                <li class="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-none" aria-current="page" th:text="${publisher.pubName}">
+                    Publisher Profile
                 </li>
             </ol>
         </nav>
@@ -70,36 +69,32 @@
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 h-24 hero-gradient"></div>
-                    
+
                     <div class="relative w-24 h-24 mx-auto mt-8 mb-4 bg-white rounded-full p-1 shadow-md">
                         <div class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center text-3xl text-indigo-400">
-                            <i class="fas fa-user-tie"></i>
+                            <i class="fas fa-building"></i>
                         </div>
                     </div>
 
-                    <h2 class="text-2xl font-extrabold text-slate-900" th:text="${author != null ? author.firstName + ' ' + author.lastName : 'Unknown Author'}">John Doe</h2>
+                    <h2 class="text-2xl font-extrabold text-slate-900" th:text="${publisher.pubName}">Publisher Name</h2>
+                    <p class="text-sm text-slate-500 mt-2" th:text="${'Publisher ID: ' + publisher.pubId}">Publisher ID</p>
 
-                    <div class="my-6">
-                        <span th:if="${author != null and author.contract == 1}" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200"><i class="fas fa-check-circle mr-1"></i> Active Contract</span>
-                        <span th:if="${author != null and author.contract == 0}" class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full border border-slate-200"><i class="fas fa-times-circle mr-1"></i> No Contract</span>
-                    </div>
-
-                    <ul class="text-left space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6">
-                        <li class="flex items-start" th:if="${author != null and author.phone != null}">
-                            <i class="fas fa-phone text-indigo-400 w-6 mt-1"></i> 
-                            <span th:text="${author.phone}">415 658-9932</span>
-                        </li>
-                        <li class="flex items-start" th:if="${author != null}">
-                            <i class="fas fa-map-marker-alt text-indigo-400 w-6 mt-1"></i> 
+                    <ul class="text-left space-y-4 text-sm text-slate-600 border-t border-slate-100 pt-6 mt-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-indigo-400 w-6 mt-1"></i>
                             <div>
-                                <span class="block" th:text="${author.address != null ? author.address : 'No Address Provided'}">Address</span>
-                                <span class="block font-medium mt-1" th:text="${author.city != null ? (author.city + ', ' + author.state + ' ' + (author.zip != null ? author.zip : '')) : 'No Location'}">City, State</span>
+                                <span class="block" th:text="${publisher.city != null ? publisher.city : 'City N/A'}"></span>
+                                <span class="block font-medium mt-1" th:text="${publisher.state != null ? publisher.state : 'State N/A'}"></span>
                             </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-earth-americas text-indigo-400 w-6 mt-1"></i>
+                            <span th:text="${publisher.country != null ? publisher.country : 'Country N/A'}"></span>
                         </li>
                     </ul>
 
                     <div class="grid grid-cols-2 gap-3 mt-8 pt-6 border-t border-slate-100">
-                        <button type="button" onclick="toggleModal('editAuthorModal')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 py-2.5 rounded-xl font-bold transition shadow-sm">
+                        <button type="button" onclick="toggleModal('editPublisherModal')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 py-2.5 rounded-xl font-bold transition shadow-sm">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </button>
                         <button type="button" onclick="toggleModal('deleteConfirmModal')" class="bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-xl font-bold transition shadow-sm">
@@ -114,7 +109,7 @@
                     <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-book text-indigo-500 mr-2"></i> Published Titles</h2>
-                            <p class="text-sm text-slate-500 mt-1">Books and publications linked to this author.</p>
+                            <p class="text-sm text-slate-500 mt-1">All books currently associated with this publisher.</p>
                         </div>
                         <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full" th:text="${titleList.size()} + ' Titles'">0 Titles</span>
                     </div>
@@ -123,28 +118,27 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                                    <th class="p-4 font-bold text-indigo-600">Book Title</th>
-                                    <th class="p-4 font-bold text-indigo-600">Publisher</th>
+                                    <th class="p-4 font-bold text-indigo-600">Title</th>
+                                    <th class="p-4 font-bold text-indigo-600">Type</th>
                                     <th class="p-4 font-bold text-right text-indigo-600">Price</th>
                                     <th class="p-4 font-bold text-right text-indigo-600">Royalty</th>
+                                    <th class="p-4 font-bold text-right text-indigo-600">YTD Sales</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr th:if="${#lists.isEmpty(titleList)}">
-                                    <td colspan="4" class="p-24 text-center text-slate-500 bg-slate-50/30">
+                                    <td colspan="5" class="p-24 text-center text-slate-500 bg-slate-50/30">
                                         <i class="fas fa-book-open text-5xl text-slate-200 mb-4 block"></i>
-                                        <span class="font-semibold block">Empty Portfolio</span>
-                                        This author currently has no published titles.
+                                        <span class="font-semibold block">No Titles Found</span>
+                                        This publisher currently has no active titles.
                                     </td>
                                 </tr>
                                 <tr th:each="title : ${titleList}" class="hover:bg-slate-50 transition">
-                                    <td class="p-4 font-bold text-slate-800" th:text="${title.bookTitle}">Book Name</td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <i class="fas fa-building text-slate-300 mr-1"></i>
-                                        <span th:text="${title.publisherName}">Publisher</span>
-                                    </td>
-                                    <td class="p-4 text-right text-sm font-mono font-bold text-slate-700" th:text="${'$' + title.price}">$0.00</td>
-                                    <td class="p-4 text-right text-sm font-mono font-bold text-indigo-600" th:text="${title.royaltyPer + '%'}">10%</td>
+                                    <td class="p-4 font-bold text-slate-800" th:text="${title.title}">Title</td>
+                                    <td class="p-4 text-sm text-slate-600" th:text="${title.type != null ? title.type : 'N/A'}">Type</td>
+                                    <td class="p-4 text-right text-sm font-mono font-bold text-slate-700" th:text="${title.price != null ? '$' + title.price : '$0.0'}">$0.0</td>
+                                    <td class="p-4 text-right text-sm font-mono font-bold text-indigo-600" th:text="${title.royalty != null ? title.royalty + '%' : '0%'}">0%</td>
+                                    <td class="p-4 text-right text-sm font-mono font-bold text-slate-700" th:text="${title.ytdSales != null ? title.ytdSales : 0}">0</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -154,56 +148,38 @@
         </div>
     </main>
 
-    <div id="editAuthorModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div id="editPublisherModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-user-edit text-indigo-500 mr-2"></i> Update Profile</h2>
-                <button type="button" onclick="toggleModal('editAuthorModal')" class="text-slate-400 hover:text-slate-700 p-2"><i class="fas fa-times text-lg"></i></button>
+                <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-user-edit text-indigo-500 mr-2"></i> Update Publisher</h2>
+                <button type="button" onclick="toggleModal('editPublisherModal')" class="text-slate-400 hover:text-slate-700 p-2"><i class="fas fa-times text-lg"></i></button>
             </div>
             <div class="p-6">
-                <form th:action="@{/authors/edit/{id}(id=${author.auId})}" th:object="${author}" method="post" class="space-y-4 text-sm">
-                    <input type="hidden" th:field="*{auId}">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">First Name</label>
-                            <input type="text" th:field="*{firstName}" required maxlength="20" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Last Name</label>
-                            <input type="text" th:field="*{lastName}" required maxlength="40" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                        </div>
-                    </div>
+                <form th:action="@{/publishers/edit/{id}(id=${publisher.pubId})}" th:object="${publisher}" method="post" class="space-y-4 text-sm">
+                    <input type="hidden" th:field="*{pubId}">
+
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Phone</label>
-                        <input type="text" th:field="*{phone}" required maxlength="12" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <label class="block font-semibold text-slate-700 mb-1">Publisher Name</label>
+                        <input type="text" th:field="*{pubName}" required maxlength="40" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                     </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Address</label>
-                        <input type="text" th:field="*{address}" maxlength="40" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    </div>
+
                     <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-1">
+                        <div>
                             <label class="block font-semibold text-slate-700 mb-1">City</label>
                             <input type="text" th:field="*{city}" maxlength="20" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                         </div>
-                        <div class="col-span-1">
+                        <div>
                             <label class="block font-semibold text-slate-700 mb-1">State</label>
                             <input type="text" th:field="*{state}" maxlength="2" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition uppercase">
                         </div>
-                        <div class="col-span-1">
-                            <label class="block font-semibold text-slate-700 mb-1">Zip</label>
-                            <input type="text" th:field="*{zip}" maxlength="5" pattern="^[0-9]{5}$" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Country</label>
+                            <input type="text" th:field="*{country}" maxlength="30" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                         </div>
                     </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Contract Status</label>
-                        <select th:field="*{contract}" class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                            <option value="1">Active Contract</option>
-                            <option value="0">No Contract</option>
-                        </select>
-                    </div>
+
                     <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100 mt-6">
-                        <button type="button" onclick="toggleModal('editAuthorModal')" class="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+                        <button type="button" onclick="toggleModal('editPublisherModal')" class="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
                         <button type="submit" class="bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-indigo-700 transition shadow-md">Save Changes</button>
                     </div>
                 </form>
@@ -216,11 +192,11 @@
             <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5 text-red-500 text-4xl shadow-inner">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Deactivate Profile?</h2>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Deactivate Publisher?</h2>
             <p class="text-slate-500 mb-8 text-sm leading-relaxed">
-                Are you sure you want to deactivate <strong class="text-slate-800" th:text="${author.firstName + ' ' + author.lastName}"></strong>? This action will remove them from the active directory.
+                Are you sure you want to deactivate <strong class="text-slate-800" th:text="${publisher.pubName}"></strong>? This action will remove it from the active directory.
             </p>
-            <form th:action="@{/authors/delete/{id}(id=${author.auId})}" method="post" class="flex space-x-3">
+            <form th:action="@{/publishers/delete/{id}(id=${publisher.pubId})}" method="post" class="flex space-x-3">
                 <button type="button" onclick="toggleModal('deleteConfirmModal')" class="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
                 <button type="submit" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md">Yes, Deactivate</button>
             </form>
@@ -244,13 +220,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const scrollPos = localStorage.getItem('detailsPageScroll');
+            const scrollPos = localStorage.getItem('publisherDetailsPageScroll');
             if (scrollPos) window.scrollTo({ top: parseInt(scrollPos), behavior: 'instant' });
 
             const toast = document.getElementById('toastNotification');
-            const isBackNav = window.performance && 
-                              window.performance.getEntriesByType("navigation")[0]?.type === 'back_forward';
-
+            const isBackNav = window.performance && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
             if (toast) {
                 if (isBackNav) toast.remove();
                 else setTimeout(hideToast, 2500);
@@ -258,7 +232,7 @@
         });
 
         window.addEventListener('beforeunload', () => {
-            localStorage.setItem('detailsPageScroll', window.scrollY);
+            localStorage.setItem('publisherDetailsPageScroll', window.scrollY);
         });
     </script>
 </body>
