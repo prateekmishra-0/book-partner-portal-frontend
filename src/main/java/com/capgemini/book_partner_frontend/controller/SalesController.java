@@ -1,6 +1,7 @@
 package com.capgemini.book_partner_frontend.controller;
 
 import com.capgemini.book_partner_frontend.model.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,9 +16,12 @@ import java.util.Map;
 public class SalesController {
 
     private final RestClient restClient;
+    private final String backendUrl; // We create a variable to save the URL
 
-    public SalesController() {
-        this.restClient = RestClient.builder().baseUrl("http://localhost:8080").build();
+    // 1. Inject the dynamic URL via the constructor
+    public SalesController(@Value("${backend.api.url}") String backendUrl) {
+        this.backendUrl = backendUrl; // Save it for later use
+        this.restClient = RestClient.builder().baseUrl(backendUrl).build();
     }
 
     @GetMapping("/stores/{id}/sales")
@@ -64,14 +68,15 @@ public class SalesController {
         requestBody.put("ordDate", formattedDate);
         requestBody.put("qty", newSale.getQty());
         requestBody.put("payterms", safePayTerms);
-        requestBody.put("store", "http://localhost:8080/api/stores/" + id);
-        requestBody.put("title", "http://localhost:8080/api/titles/" + titleId);
+
+        // 2. Use the dynamic backendUrl instead of hardcoding localhost!
+        requestBody.put("store", backendUrl + "/api/stores/" + id);
+        requestBody.put("title", backendUrl + "/api/titles/" + titleId);
 
         try {
             restClient.post().uri("/api/sales").contentType(MediaType.APPLICATION_JSON).body(requestBody).retrieve().toBodilessEntity();
             redirectAttributes.addFlashAttribute("successMessage", "Sale successfully recorded!");
         } catch (Exception e) {
-            // Now the user will actually see the error!
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to save: Quantity may exceed limits or Order Number already exists.");
         }
         return "redirect:/stores/" + id + "/sales";
