@@ -286,18 +286,26 @@
                             <tbody style="border-top: none;">
                             <tr th:each="sale : ${salesList}">
                                 <td class="fw-bold text-nowrap" style="color: #1e293b; font-size: 0.95rem;" th:text="${sale.ordNum}"></td>
+
                                 <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.ordDate != null ? #strings.substringBefore(sale.ordDate, 'T') : ''}"></td>
-                                <td class="fw-medium text-wrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.title.title}"></td>
+
+                                <td class="fw-medium text-wrap" style="color: #475569; font-size: 0.95rem;"
+                                    th:text="${sale.title != null ? sale.title.title : '[Deleted Title]'}"></td>
+
                                 <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${sale.qty}"></td>
-                                <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.title.price, 1, 2)}"></td>
+
+                                <td class="fw-medium text-nowrap" style="color: #475569; font-size: 0.95rem;"
+                                    th:text="${(sale.title != null and sale.title.price != null) ? '$' + #numbers.formatDecimal(sale.title.price, 1, 2) : 'N/A'}"></td>
+
                                 <td class="fw-bold text-nowrap" style="color: #475569; font-size: 0.95rem;" th:text="${'$' + #numbers.formatDecimal(sale.totalAmount, 1, 2)}"></td>
+
                                 <td class="text-center">
                                     <button class="btn-action-edit border-0"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editSaleModal"
                                             th:data-composite="${sale.compositeId}"
                                             th:data-ordnum="${sale.ordNum}"
-                                            th:data-book="${sale.title.title}"
+                                            th:data-book="${sale.title != null ? sale.title.title : '[Deleted Title]'}"
                                             th:data-qty="${sale.qty}"
                                             th:data-payterms="${sale.payterms}"
                                             onclick="populateEditSaleModal(this)">
