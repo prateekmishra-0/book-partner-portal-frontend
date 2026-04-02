@@ -283,7 +283,7 @@
                         <label class="form-label fw-bold text-secondary small text-uppercase">Store ID (Exactly 4 Chars)</label>
                         <input type="text" class="form-control"
                                th:classappend="${duplicateIdError != null} ? 'is-invalid' : ''"
-                               th:field="*{storId}" maxlength="4" required>
+                               th:field="*{storId}" maxlength="4" minlength="4" required>
                         <div class="invalid-feedback fw-bold" th:if="${duplicateIdError}" th:text="${duplicateIdError}"></div>
                     </div>
                     <div class="mb-3">
