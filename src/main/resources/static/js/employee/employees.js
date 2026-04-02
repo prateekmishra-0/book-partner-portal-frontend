@@ -1,3 +1,23 @@
+// ==========================================
+// GLOBAL RATE LIMIT LISTENER
+// ==========================================
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    try {
+        const response = await originalFetch.apply(this, args);
+        // If the backend interceptor returns 429 Too Many Requests
+        if (response.status === 429) {
+            toggleModal('rateLimitModal');
+            // Throw a silent error to stop the rest of the JS from executing and crashing
+            return Promise.reject(new Error("Rate limit exceeded. Blocked by frontend."));
+        }
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+// ==========================================
+
 // State variables
 let currentUrl = '/ui-api/employees?page=0&size=10&sort=fname,asc';
 let prevUrl = null;

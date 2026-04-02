@@ -19,9 +19,10 @@ public class SalesController {
     private final String backendUrl; // We create a variable to save the URL
 
     // 1. Inject the dynamic URL via the constructor
-    public SalesController(@Value("${backend.api.url}") String backendUrl) {
+    // NEW WAY: Inject RestClient.Builder to get the Global Secret Key!
+    public SalesController(RestClient.Builder builder, @Value("${backend.api.url}") String backendUrl) {
         this.backendUrl = backendUrl; // Save it for later use
-        this.restClient = RestClient.builder().baseUrl(backendUrl).build();
+        this.restClient = builder.baseUrl(backendUrl).build();
     }
 
     @GetMapping("/stores/{id}/sales")

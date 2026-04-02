@@ -1,4 +1,26 @@
+// ==========================================
+// GLOBAL RATE LIMIT LISTENER
+// ==========================================
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    try {
+        const response = await originalFetch.apply(this, args);
+        // If the backend interceptor returns 429 Too Many Requests
+        if (response.status === 429) {
+            toggleModal('rateLimitModal');
+            // Throw a silent error to stop the rest of the JS from executing and crashing
+            return Promise.reject(new Error("Rate limit exceeded. Blocked by frontend."));
+        }
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
+// ==========================================
+
+
 let jobDataMap = {};
+let currentEtag = null; // Add this near the top with your other variables
 const params = new URLSearchParams(window.location.search);
 const empId = params.get('id');
 
@@ -30,8 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
     editForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
+        // 1. Client-side validation for Job Level
         if (!validateJobLevel(document.getElementById('editJobSelect').value, document.getElementById('editJobLvl'), document.getElementById('editJobLvlError'))) return;
 
+        // 2. Gather form data
         const updates = {
             fname: document.getElementById('editFname').value.trim(),
             minit: document.getElementById('editMinit').value.trim() || null,
@@ -41,17 +65,28 @@ document.addEventListener("DOMContentLoaded", () => {
             pubId: document.getElementById('editPubSelect').value
         };
 
+        // 3. Fire the request to your Proxy Controller with the ETag Fingerprint
         fetch(`/ui-api/employees/${empId}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'If-Match': currentEtag // <--- THIS IS THE MAGIC SHIELD
+            },
             body: JSON.stringify(updates)
         }).then(async response => {
             if (response.ok || response.status === 200) {
+                // SUCCESS: Refresh data and close modal
                 editModal.close();
                 loadEmployeeDetails();
+            } else if (response.status === 409) {
+                // CONFLICT: Trigger the "Out of Sync" modal
+                editModal.close(); // Hide the edit form first
+                toggleModal('conflictModal'); // Show the beautiful warning popup
             } else {
+                // OTHER ERRORS: (Validation or Server Error)
                 const errorText = await response.text();
-                document.getElementById('editFormErrorMsg').innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Server Error ${response.status}:</strong> ${errorText}`;
+                document.getElementById('editFormErrorMsg').innerHTML =
+                    `<i class="fas fa-exclamation-triangle"></i> <strong>Server Error ${response.status}:</strong> ${errorText}`;
                 document.getElementById('editFormErrorMsg').style.display = 'block';
             }
         }).catch(error => {
@@ -87,6 +122,7 @@ function loadEmployeeDetails() {
             if (!response.ok) {
                 throw new Error(`Server returned error: ${response.status}`);
             }
+            currentEtag = response.headers.get('ETag');
             return response.json();
         })
         .then(emp => {

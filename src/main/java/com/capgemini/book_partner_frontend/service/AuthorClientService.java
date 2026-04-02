@@ -79,21 +79,12 @@ public class AuthorClientService {
     }
 
     public void updateAuthor(String id, AuthorDto updatedAuthor) {
-        try {
-            // FIX: Prepend backendUrl
-            restClient.put()
-                    .uri(backendUrl + "/api/authors/{id}", id)
-                    .body(updatedAuthor)
-                    .retrieve()
-                    .onStatus(status -> status.is4xxClientError(), (request, response) -> {
-                        // This will print the actual validation error from the backend
-                        String errorBody = new String(response.getBody().readAllBytes());
-                        System.err.println("Backend Rejected Request: " + errorBody);
-                    })
-                    .toBodilessEntity();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Removed the try-catch and onStatus so the Controller can actually catch the error!
+        restClient.put()
+                .uri(backendUrl + "/api/authors/{id}", id)
+                .body(updatedAuthor)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     public List<AuthorTitleDto> fetchTitlesByAuthor(String auId) {
