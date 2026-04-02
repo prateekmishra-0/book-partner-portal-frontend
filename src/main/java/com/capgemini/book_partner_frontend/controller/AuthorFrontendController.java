@@ -41,14 +41,18 @@ public class AuthorFrontendController {
             redirectAttributes.addFlashAttribute("messageType", "success");
             
             return ResponseEntity.ok("Success");
-        } catch (HttpClientErrorException.Conflict e) {
-
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getResponseBodyAsString());
+            
+        } catch (HttpClientErrorException e) {
+            // This gracefully catches ALL 4xx errors from your backend API 
+            // (including 409 Conflict and 400 Bad Request) 
+            // and forwards the exact status code and body to your JavaScript!
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // This acts as a safety net for non-HTTP errors (e.g., your frontend server losing connection)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
         }
     }
-
     // --- Edit Author Success/Error ---
     @PostMapping("/edit/{id}")
     public String editAuthor(@PathVariable("id") String id, @ModelAttribute("author") AuthorDto updatedAuthor, RedirectAttributes redirectAttributes) {
