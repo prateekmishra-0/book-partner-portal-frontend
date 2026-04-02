@@ -127,6 +127,45 @@
     </div>
 </div>
 
+<div id="conflictModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Out of Sync!</h2>
+        <p class="text-slate-500 mb-6 text-sm">
+            Someone else just updated this record. To prevent overwriting their changes, please refresh the page to get the latest data.
+        </p>
+
+        <div class="flex flex-col space-y-3">
+            <button type="button" onclick="location.reload()" class="w-full py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md">
+                <i class="fas fa-redo mr-2"></i> Refresh Now
+            </button>
+            <button type="button" onclick="toggleModal('conflictModal')" class="w-full py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                Dismiss
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="rateLimitModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center overflow-hidden">
+        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner">
+            <i class="fas fa-hand-paper"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Whoa, Slow Down!</h2>
+        <p class="text-slate-500 mb-6 text-sm">
+            You are sending too many requests to the server. Please wait <strong class="text-slate-800">10 seconds</strong> before trying again.
+        </p>
+
+        <div class="flex justify-center">
+            <button type="button" onclick="toggleModal('rateLimitModal')" class="w-full py-3 rounded-xl font-bold text-white bg-amber-500 hover:bg-amber-600 transition shadow-md">
+                I Understand
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/employee/employee-details.js"></script>
 </body>
 </html>

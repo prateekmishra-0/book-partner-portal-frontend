@@ -6,6 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.util.DigestUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/ui-api/employees")
@@ -13,8 +16,9 @@ public class EmployeeProxyController {
 
     private final RestClient restClient;
 
-    public EmployeeProxyController(@Value("${backend.api.url}") String backendUrl) {
-        this.restClient = RestClient.builder().baseUrl(backendUrl).build();
+    // NEW WAY: Let Spring inject the Builder so it gets the Global Security Config!
+    public EmployeeProxyController(RestClient.Builder builder, @Value("${backend.api.url}") String backendUrl) {
+        this.restClient = builder.baseUrl(backendUrl).build();
     }
 
     // ==========================================
@@ -78,11 +82,28 @@ public class EmployeeProxyController {
         }
     }
 
-    // API 7: Update Employee (Partial Update)
+    // ==========================================
+    // API 7: Update Employee (With Concurrency Check)
     // ==========================================
     @PatchMapping("/{id}")
-    public ResponseEntity<String> updateEmployee(@PathVariable String id, @RequestBody String updatesJson) {
+    public ResponseEntity<String> updateEmployee(@PathVariable String id,
+                                                 @RequestBody String updatesJson,
+                                                 @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
         try {
+            // 1. THE SHIELD: Check if another user changed the data
+            if (ifMatch != null) {
+                String uri = String.format("/api/employees/%s?projection=employeeDetail", id);
+                String currentBody = restClient.get().uri(uri).retrieve().body(String.class);
+                String currentEtag = "\"" + DigestUtils.md5DigestAsHex(currentBody.getBytes()) + "\"";
+
+                if (!ifMatch.equals(currentEtag)) {
+                    // The fingerprints don't match! Someone else updated it. Block the request.
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body("Another user updated this record while you were editing.");
+                }
+            }
+
+            // 2. If fingerprints match, proceed with the save safely
             return restClient.patch()
                     .uri("/api/employees/" + id)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -90,21 +111,25 @@ public class EmployeeProxyController {
                     .retrieve()
                     .toEntity(String.class);
         } catch (RestClientResponseException e) {
-            // Pass errors safely to UI
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         }
     }
 
-    // ==========================================
-    // API 8: Fetch Employee Details (For Page 3)
+    // API 8: Fetch Employee Details (With ETag)
     // ==========================================
     @GetMapping("/{id}")
     public ResponseEntity<String> getEmployeeDetails(@PathVariable String id) {
         try {
             String uri = String.format("/api/employees/%s?projection=employeeDetail", id);
-            return restClient.get().uri(uri).retrieve().toEntity(String.class);
+            ResponseEntity<String> response = restClient.get().uri(uri).retrieve().toEntity(String.class);
+
+            // Generate a digital fingerprint (ETag) of the current data
+            String etag = "\"" + DigestUtils.md5DigestAsHex(response.getBody().getBytes()) + "\"";
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.ETAG, etag) // Send the fingerprint to the browser
+                    .body(response.getBody());
         } catch (RestClientResponseException e) {
-            // If the employee is soft-deleted, safely pass the 404 Not Found to the UI
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         }
     }
