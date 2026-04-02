@@ -2,6 +2,7 @@ package com.capgemini.book_partner_frontend.controller;
 
 import com.capgemini.book_partner_frontend.model.Store;
 import com.capgemini.book_partner_frontend.model.StoreResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,13 +19,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class StoreController {
 
     private final RestClient restClient;
+//    @Value("${backend.api.url}")
+//    private String backendUrl;
 
     /**
      * Initializes the REST client with the backend API base URL.
      */
-    public StoreController() {
+    public StoreController(@Value("${backend.api.url}") String backendUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl("http://localhost:8080")
+                .baseUrl(backendUrl)
                 .build();
     }
 
