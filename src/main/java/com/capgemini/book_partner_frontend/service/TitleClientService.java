@@ -3,6 +3,7 @@ package com.capgemini.book_partner_frontend.service;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -22,15 +23,17 @@ public class TitleClientService {
     private final ObjectMapper objectMapper;
     private final AuthorClientService authorClientService;
 
+    @Value("${backend.api.url}")
+    private String backendUrl;
     public TitleClientService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper, AuthorClientService authorClientService) {
-        this.restClient = restClientBuilder.baseUrl("http://localhost:8080").build();
+        this.restClient = restClientBuilder.baseUrl(backendUrl).build();
         this.objectMapper = objectMapper;
         this.authorClientService = authorClientService;
     }
 
     public List<TitleDto> fetchTitles() {
         try {
-            String jsonResponse = restClient.get().uri("/api/titles").retrieve().body(String.class);
+            String jsonResponse = restClient.get().uri(backendUrl+"/api/titles").retrieve().body(String.class);
             if (jsonResponse == null) return Collections.emptyList();
             JsonNode rootNode = objectMapper.readTree(jsonResponse);
             JsonNode titlesNode = rootNode.at("/_embedded/titles");
@@ -43,16 +46,16 @@ public class TitleClientService {
     }
 
     public void createTitle(TitleDto newTitle) {
-        restClient.post().uri("/api/titles").body(newTitle).retrieve().toBodilessEntity(); 
+        restClient.post().uri(backendUrl+"/api/titles").body(newTitle).retrieve().toBodilessEntity(); 
     }
 
     public void deleteTitle(String id) {
-        restClient.delete().uri("/api/titles/{id}", id).retrieve().toBodilessEntity(); 
+        restClient.delete().uri(backendUrl+"/api/titles/{id}", id).retrieve().toBodilessEntity(); 
     }
 
     public TitleDto fetchTitleById(String id) {
         try {
-            TitleDto title = restClient.get().uri("/api/titles/{id}", id).retrieve().body(TitleDto.class);
+            TitleDto title = restClient.get().uri(backendUrl+"/api/titles/{id}", id).retrieve().body(TitleDto.class);
             // The backend returns pubId as a plain field, but publisher is lazy — 
             // fetch it separately using the pubId and inject it into the DTO.
             if (title != null && title.getPubId() != null) {
@@ -73,7 +76,7 @@ public class TitleClientService {
     private PublisherDto fetchPublisherById(String pubId) {
         try {
             return restClient.get()
-                    .uri("/api/publishers/{id}", pubId)
+                    .uri(backendUrl+"/api/publishers/{id}", pubId)
                     .retrieve()
                     .body(PublisherDto.class);
         } catch (Exception e) {
@@ -85,7 +88,7 @@ public class TitleClientService {
     public void updateTitle(String id, TitleDto updatedTitle) {
         try {
             restClient.put()
-                    .uri("/api/titles/{id}", id)
+                    .uri(backendUrl+"/api/titles/{id}", id)
                     .body(updatedTitle)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError(), (request, response) -> {
@@ -103,7 +106,7 @@ public class TitleClientService {
             System.out.println("=== Fetching authors for titleId: " + titleId + " ===");
             
             String jsonResponse = restClient.get()
-                    .uri("/api/titleAuthors/search/byTitle?titleId={id}&page=0&size=50", titleId)
+                    .uri(backendUrl+"/api/titleAuthors/search/byTitle?titleId={id}&page=0&size=50", titleId)
                     .retrieve().body(String.class);
             
             if (jsonResponse == null) {
@@ -168,7 +171,7 @@ public class TitleClientService {
         try {
             // Step 1: Fetch all current associations for this title
             String jsonResponse = restClient.get()
-                    .uri("/api/titleAuthors/search/byTitle?titleId={id}&page=0&size=100", titleId)
+                    .uri(backendUrl+"/api/titleAuthors/search/byTitle?titleId={id}&page=0&size=100", titleId)
                     .retrieve()
                     .body(String.class);
 
@@ -184,7 +187,7 @@ public class TitleClientService {
                             // compositeKey format: "auId_titleId"  e.g. "172-32-1176_BU1032"
                             String compositeKey = href.substring(href.lastIndexOf('/') + 1);
                             restClient.delete()
-                                    .uri("/api/titleAuthors/{key}", compositeKey)
+                                    .uri(backendUrl+"/api/titleAuthors/{key}", compositeKey)
                                     .retrieve()
                                     .onStatus(status -> !status.is2xxSuccessful(), (req, res) -> {
                                         System.err.println("Delete titleAuthor failed for key: " + compositeKey);
@@ -200,7 +203,7 @@ public class TitleClientService {
                 String auId = authorIds.get(i);
                 String payload = "{\"id\":{\"titleId\":\"" + titleId + "\",\"auId\":\"" + auId + "\"},\"auOrd\":" + (i + 1) + ",\"royaltyPer\":0}";
                 restClient.post()
-                        .uri("/api/titleAuthors")
+                        .uri(backendUrl+"/api/titleAuthors")
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .body(payload)
                         .retrieve()
@@ -216,7 +219,7 @@ public class TitleClientService {
      */
     public List<PublisherDto> fetchAllPublishers() {
         try {
-            String jsonResponse = restClient.get().uri("/api/publishers").retrieve().body(String.class);
+            String jsonResponse = restClient.get().uri(backendUrl+"/api/publishers").retrieve().body(String.class);
             if (jsonResponse == null) return Collections.emptyList();
             JsonNode rootNode = objectMapper.readTree(jsonResponse);
             JsonNode publishersNode = rootNode.at("/_embedded/publishers");
@@ -236,7 +239,7 @@ public class TitleClientService {
                     ? "&sort=" + sortBy + "," + (sortDir != null && sortDir.equals("desc") ? "desc" : "asc")
                     : "";
 
-            String uri = "/api/titles?page=" + page + "&size=" + size + sortParam;
+            String uri = backendUrl+"/api/titles?page=" + page + "&size=" + size + sortParam;
 
             if (keyword != null && !keyword.trim().isEmpty() && searchBy != null) {
                 String searchPath = switch (searchBy) {
@@ -248,7 +251,7 @@ public class TitleClientService {
                     default -> "";
                 };
                 if (!searchPath.isEmpty()) {
-                    uri = "/api/titles/" + searchPath + "&page=" + page + "&size=" + size + sortParam;
+                    uri =backendUrl+ "/api/titles/" + searchPath + "&page=" + page + "&size=" + size + sortParam;
                 }
             }
 
@@ -281,7 +284,7 @@ public class TitleClientService {
      */
     public PagedResult<TitleDto> searchTitlesAdvanced(int page, int size, String searchType, String searchValue) {
         try {
-            String uri = "/api/titles?page=" + page + "&size=" + size;
+            String uri =backendUrl+ "/api/titles?page=" + page + "&size=" + size;
 
             if (searchValue != null && !searchValue.trim().isEmpty()) {
                 String searchPath = switch (searchType) {
@@ -293,7 +296,7 @@ public class TitleClientService {
                     default -> "";
                 };
                 if (!searchPath.isEmpty()) {
-                    uri = "/api/titles/" + searchPath + "&page=" + page + "&size=" + size;
+                    uri = backendUrl+"/api/titles/" + searchPath + "&page=" + page + "&size=" + size;
                 }
             }
 
