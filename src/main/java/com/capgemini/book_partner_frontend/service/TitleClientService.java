@@ -86,19 +86,12 @@ public class TitleClientService {
     }
 
     public void updateTitle(String id, TitleDto updatedTitle) {
-        try {
-            restClient.put()
-                    .uri(backendUrl+"/api/titles/{id}", id)
-                    .body(updatedTitle)
-                    .retrieve()
-                    .onStatus(status -> status.is4xxClientError(), (request, response) -> {
-                        String errorBody = new String(response.getBody().readAllBytes());
-                        System.err.println("Backend Rejected Request: " + errorBody);
-                    })
-                    .toBodilessEntity();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Removed the try-catch and onStatus so the Controller can actually catch the error!
+        restClient.put()
+                .uri(backendUrl+"/api/titles/{id}", id)
+                .body(updatedTitle)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     public List<AuthorDto> fetchAuthorsByTitle(String titleId) {

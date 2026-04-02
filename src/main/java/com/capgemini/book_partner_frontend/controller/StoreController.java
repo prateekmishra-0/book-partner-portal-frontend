@@ -25,8 +25,9 @@ public class StoreController {
     /**
      * Initializes the REST client with the backend API base URL.
      */
-    public StoreController(@Value("${backend.api.url}") String backendUrl) {
-        this.restClient = RestClient.builder()
+    // NEW WAY: Inject RestClient.Builder to get the Global Secret Key!
+    public StoreController(RestClient.Builder builder, @Value("${backend.api.url}") String backendUrl) {
+        this.restClient = builder
                 .baseUrl(backendUrl)
                 .build();
     }
