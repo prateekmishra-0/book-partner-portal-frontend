@@ -161,7 +161,7 @@ Browser: PUT /ui-api/employees/A-C71970F (user submits form)
 
 | Layer | Technology |
 |---|---|
-| Language | Java 11 |
+| Language | Java 17 |
 | Framework | Spring Boot, Spring MVC |
 | Templating | Thymeleaf (SSR) |
 | HTTP Client | Spring `RestClient` |
